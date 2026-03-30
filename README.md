@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- Configurar Tailwind para evitar conflitos -->
     <script>
         tailwind.config = {
             theme: {
@@ -19,26 +18,22 @@
                     animation: {
                         'fade-in': 'fadeIn 0.3s ease-out',
                         'slide-up': 'slideUp 0.2s ease-out',
-                        'pulse-scale': 'pulseScale 0.2s ease-in-out'
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        slideUp: { '0%': { transform: 'translateY(8px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        pulseScale: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(0.98)' }, '100%': { transform: 'scale(1)' } }
+                        slideUp: { '0%': { transform: 'translateY(8px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Transições e scroll suave */
         body {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .card-modern {
             transition: all 0.2s ease;
-            backdrop-filter: blur(0px);
         }
         .card-modern:hover {
             transform: translateY(-2px);
@@ -46,24 +41,13 @@
         }
         .btn-certo {
             background: linear-gradient(135deg, #22c55e, #16a34a);
-            transition: all 0.2s;
-        }
-        .btn-certo:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
         }
         .btn-errado {
             background: linear-gradient(135deg, #ef4444, #dc2626);
-            transition: all 0.2s;
-        }
-        .btn-errado:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
         }
         .progress-bar {
             transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
-        /* custom scroll */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -77,14 +61,22 @@
         }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
     <div class="max-w-7xl mx-auto px-4 py-6 md:py-8">
-        <!-- Header com logo e título -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8 pb-4 border-b border-gray-200">
-            <div class="flex items-center gap-3">
+        <!-- Header com logo dupla: ícone original + imagem ilustrativa -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-gray-200">
+            <div class="flex items-center gap-4">
+                <!-- Ícone principal (já existente) -->
                 <div class="bg-gradient-to-br from-emerald-500 to-green-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
                     <i class="fas fa-check-double text-white text-xl"></i>
+                </div>
+                <!-- Nova imagem representando "fazer questões" (ícone estilizado) -->
+                <div class="hidden sm:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-full">
+                    <i class="fas fa-file-alt text-green-600 text-lg"></i>
+                    <i class="fas fa-arrow-right text-gray-400 text-sm"></i>
+                    <i class="fas fa-pen-fancy text-blue-500 text-lg"></i>
+                    <span class="text-xs font-medium text-gray-600">Modo simulado</span>
                 </div>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Questões <span class="text-green-600">CESPE/CEBRASPE</span></h1>
@@ -99,7 +91,7 @@
 
         <!-- Layout grid: coluna esquerda (Importador + Dashboard) e coluna direita (Questão ativa) -->
         <div class="grid lg:grid-cols-12 gap-6">
-            <!-- Sidebar esquerda: importação + estatísticas -->
+            <!-- Sidebar esquerda -->
             <div class="lg:col-span-5 space-y-6">
                 <!-- Card Importação -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-modern">
@@ -107,11 +99,10 @@
                         <div class="bg-green-100 p-2 rounded-xl"><i class="fas fa-file-import text-green-600 text-lg"></i></div>
                         <div>
                             <h2 class="font-bold text-gray-800">Importar questões</h2>
-                            <p class="text-xs text-gray-500">Formato: Questão X: "texto" + Comentário: + Gabarito: Certo/Errado</p>
+                            <p class="text-xs text-gray-500">Formato CESPE/CEBRASPE: Questão X: enunciado + Comentário: + Gabarito: Certo/Errado</p>
                         </div>
                     </div>
-                    <textarea id="rawQuestionsInput" rows="6" class="w-full border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-400 focus:outline-none transition" placeholder='Exemplo:
-Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."
+                    <textarea id="rawQuestionsInput" rows="6" class="w-full border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-400 focus:outline-none transition" placeholder='Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."
 
 Comentário: "Adotada pela ONU em 10 de dezembro de 1948."
 
@@ -136,7 +127,6 @@ Gabarito: Errado'></textarea>
                         <h2 class="font-bold text-gray-800">Meu desempenho</h2>
                     </div>
                     <div id="dashboardContainer">
-                        <!-- Conteúdo dinâmico via JS -->
                         <div class="text-center py-8 text-gray-400"><i class="fas fa-chart-simple text-3xl mb-2 block"></i> Nenhuma questão respondida ainda</div>
                     </div>
                 </div>
@@ -145,7 +135,6 @@ Gabarito: Errado'></textarea>
             <!-- Coluna direita: Questão ativa -->
             <div class="lg:col-span-7">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6 card-modern min-h-[500px] transition-all" id="questionPanel">
-                    <!-- Conteúdo da questão renderizado dinamicamente -->
                     <div class="flex flex-col items-center justify-center py-12 text-gray-400">
                         <i class="fas fa-brain text-5xl mb-3 text-gray-300"></i>
                         <p class="text-center">Importe ou selecione questões<br>para começar a treinar</p>
@@ -157,14 +146,12 @@ Gabarito: Errado'></textarea>
 
     <script>
         // ---------- Estrutura de dados ----------
-        let questions = [];            // array de objetos { id, number, text, comment, answer }
+        let questions = [];            // { id, number, text, comment, answer }
         let answers = [];              // { questionId, isCorrect, userChoice, timestamp }
         let currentIndex = 0;
-        
-        // Estado auxiliar para exibir comentário (por questão)
         let commentVisibleMap = new Map();   // key = questionId, boolean
         
-        // Referências DOM
+        // DOM references
         const dashboardContainer = document.getElementById('dashboardContainer');
         const questionPanel = document.getElementById('questionPanel');
         const rawInput = document.getElementById('rawQuestionsInput');
@@ -174,12 +161,11 @@ Gabarito: Errado'></textarea>
         const clearAllBtn = document.getElementById('clearAllDataBtn');
         const importFeedback = document.getElementById('importFeedback');
         
-        // ---------- funções auxiliares localStorage ----------
+        // ---------- localStorage ----------
         function saveToLocalStorage() {
             localStorage.setItem('cebraspe_questions', JSON.stringify(questions));
             localStorage.setItem('cebraspe_answers', JSON.stringify(answers));
             localStorage.setItem('cebraspe_currentIndex', currentIndex.toString());
-            // Guardar visibilidade dos comentários
             localStorage.setItem('cebraspe_commentsVisible', JSON.stringify([...commentVisibleMap.entries()]));
         }
         
@@ -195,10 +181,8 @@ Gabarito: Errado'></textarea>
             if (storedComments) {
                 const arr = JSON.parse(storedComments);
                 commentVisibleMap = new Map(arr);
-            } else {
-                commentVisibleMap.clear();
-            }
-            // garantir que currentIndex não extrapole
+            } else commentVisibleMap.clear();
+            
             if (questions.length > 0 && currentIndex >= questions.length) currentIndex = questions.length - 1;
             if (currentIndex < 0) currentIndex = 0;
         }
@@ -224,73 +208,97 @@ Gabarito: Errado'></textarea>
             renderAll();
         }
         
-        // ---------- parser das questões (formato CESPE/CEBRASPE) ----------
+        // ---------- PARSER CORRIGIDO: separa enunciado, comentário e gabarito ----------
         function parseQuestionsFromText(text) {
             const questionsArray = [];
-            // Regex robusto: encontra blocos "Questão X:" até o próximo "Questão" ou fim
+            // Expressão para capturar blocos individuais: "Questão X:" até o próximo "Questão" ou fim do texto
             const blockRegex = /Questão\s+(\d+):\s*([\s\S]*?)(?=Questão\s+\d+:|$)/gi;
             let match;
+            
             while ((match = blockRegex.exec(text)) !== null) {
                 const number = parseInt(match[1], 10);
-                let content = match[2].trim();
-                if (!content) continue;
+                let blockContent = match[2].trim();
+                if (!blockContent) continue;
                 
-                // Extrair gabarito (Certo/Errado)
+                // 1) Extrair GABARITO primeiro (Certo ou Errado)
                 let answer = 'Certo';
-                const gabaritoMatch = content.match(/Gabarito:\s*(Certo|Errado)/i);
-                if (gabaritoMatch) {
-                    answer = gabaritoMatch[1];
-                    content = content.replace(/Gabarito:\s*(Certo|Errado)/i, '');
+                const gabaritoRegex = /Gabarito:\s*(Certo|Errado)/i;
+                const gabMatch = blockContent.match(gabaritoRegex);
+                if (gabMatch) {
+                    answer = gabMatch[1];
+                    // Remove a linha do gabarito do conteúdo para não poluir comentário/enunciado
+                    blockContent = blockContent.replace(gabaritoRegex, '');
                 }
-                // Extrair comentário
-                let comment = '';
-                const commentMatch = content.match(/Comentário:\s*([\s\S]*?)(?=(?:Questão|\Z))/i);
-                if (commentMatch) {
-                    comment = commentMatch[1].trim();
-                    content = content.replace(/Comentário:\s*[\s\S]*?(?=(?:Questão|\Z))/i, '');
-                }
-                // Limpar enunciado: remover aspas iniciais/finais se existirem
-                let questionText = content.trim();
-                questionText = questionText.replace(/^["']|["']$/g, '').trim();
-                if (questionText === "" && content !== "") questionText = content.split('\n')[0].replace(/^["']|["']$/g, '').trim();
                 
-                if (questionText) {
+                // 2) Extrair COMENTÁRIO: tudo que vem após "Comentário:" até antes de "Gabarito" ou fim do bloco
+                let comment = '';
+                const commentRegex = /Comentário:\s*([\s\S]*?)(?=(?:Gabarito:|$))/i;
+                const commentMatch = blockContent.match(commentRegex);
+                if (commentMatch) {
+                    let rawComment = commentMatch[1].trim();
+                    // Remover possíveis aspas extras e quebras malucas
+                    rawComment = rawComment.replace(/^["']|["']$/g, '').replace(/\n{3,}/g, '\n\n').trim();
+                    comment = rawComment || "Sem comentário detalhado para esta questão.";
+                    // Remove o trecho do comentário do bloco para isolar o enunciado
+                    blockContent = blockContent.replace(commentRegex, '');
+                } else {
+                    comment = "Sem comentário detalhado para esta questão.";
+                }
+                
+                // 3) O que restou é o ENUNCIADO (pode ter quebras de linha, aspas, etc.)
+                let questionText = blockContent.trim();
+                // Remover aspas duplas ou simples no início e fim do enunciado, se existirem
+                questionText = questionText.replace(/^["']|["']$/g, '').trim();
+                // Se o enunciado ficou vazio, tentar pegar a primeira linha significativa
+                if (questionText === "" && blockContent !== "") {
+                    const lines = blockContent.split(/\r?\n/);
+                    questionText = lines[0].replace(/^["']|["']$/g, '').trim();
+                }
+                
+                // Validação final
+                if (questionText.length > 0) {
                     questionsArray.push({
                         id: Date.now() + Math.random() * 10000 + number,
                         number: number,
                         text: questionText,
-                        comment: comment || "Sem comentário detalhado para esta questão.",
+                        comment: comment,
                         answer: answer
                     });
                 }
             }
-            // Se não encontrou nenhuma questão no formato padrão, tenta detectar blocos simples (fallback)
+            
+            // Fallback para casos de formatação menos rigorosa (ex: sem quebra de linha após "Comentário:")
             if (questionsArray.length === 0 && text.includes('Questão')) {
-                // fallback manual: linhas 
+                // Tentativa mais simples: dividir por linhas e reconstruir
                 const lines = text.split(/\r?\n/);
-                let tempQuestion = null;
+                let current = null;
                 for (let line of lines) {
                     line = line.trim();
                     if (line.match(/^Questão\s+\d+:/i)) {
-                        if (tempQuestion && tempQuestion.text) questionsArray.push(tempQuestion);
+                        if (current && current.text) questionsArray.push(current);
                         const numMatch = line.match(/Questão\s+(\d+):/i);
                         const num = numMatch ? parseInt(numMatch[1]) : questionsArray.length+1;
-                        const textPart = line.replace(/^Questão\s+\d+:\s*/i, '').replace(/^["']|["']$/g, '');
-                        tempQuestion = { id: Date.now()+Math.random(), number: num, text: textPart, comment: '', answer: 'Certo' };
-                    } else if (tempQuestion && line.match(/^Comentário:/i)) {
+                        let textPart = line.replace(/^Questão\s+\d+:\s*/i, '').replace(/^["']|["']$/g, '');
+                        current = { id: Date.now()+Math.random(), number: num, text: textPart, comment: '', answer: 'Certo' };
+                    } else if (current && line.match(/^Comentário:/i)) {
                         const commentContent = line.replace(/^Comentário:\s*/i, '').replace(/^["']|["']$/g, '');
-                        tempQuestion.comment = commentContent;
-                    } else if (tempQuestion && line.match(/^Gabarito:\s*(Certo|Errado)/i)) {
+                        current.comment = commentContent;
+                    } else if (current && line.match(/^Gabarito:\s*(Certo|Errado)/i)) {
                         const gabMatch = line.match(/Gabarito:\s*(Certo|Errado)/i);
-                        if (gabMatch) tempQuestion.answer = gabMatch[1];
-                    } else if (tempQuestion && line !== "" && !line.match(/^Comentário|^Gabarito/i)) {
-                        tempQuestion.text += " " + line;
+                        if (gabMatch) current.answer = gabMatch[1];
+                    } else if (current && line !== "" && !line.match(/^Comentário|^Gabarito/i)) {
+                        current.text += " " + line;
                     }
                 }
-                if (tempQuestion && tempQuestion.text) questionsArray.push(tempQuestion);
+                if (current && current.text) questionsArray.push(current);
             }
-            // Ajustar IDs sequenciais
-            return questionsArray.map((q, idx) => ({ ...q, id: idx+1 }));
+            
+            // Garantir que comentário nunca fique vazio e que enunciado não contenha "Comentário:"
+            return questionsArray.map((q, idx) => ({
+                ...q,
+                id: idx+1,
+                comment: q.comment && q.comment !== "" ? q.comment : "Sem comentário disponível."
+            }));
         }
         
         // ---------- Estatísticas ----------
@@ -302,7 +310,7 @@ Gabarito: Errado'></textarea>
             return { totalAnswered, totalCorrect, totalWrong, percentage };
         }
         
-        // ---------- Funções de manipulação ----------
+        // ---------- Manipulação do fluxo ----------
         function importQuestions(rawText) {
             if (!rawText.trim()) {
                 showToast("Cole o texto das questões antes de importar.", "warning");
@@ -310,7 +318,7 @@ Gabarito: Errado'></textarea>
             }
             const parsed = parseQuestionsFromText(rawText);
             if (parsed.length === 0) {
-                showToast("Nenhuma questão válida encontrada. Use o formato: Questão X: ... Comentário: ... Gabarito: Certo/Errado", "error");
+                showToast("Nenhuma questão válida encontrada. Use o formato: Questão X: enunciado + Comentário: + Gabarito: Certo/Errado", "error");
                 return false;
             }
             questions = parsed;
@@ -327,31 +335,27 @@ Gabarito: Errado'></textarea>
             if (questions.length === 0) return;
             const currentQ = questions[currentIndex];
             if (!currentQ) return;
-            // verificar se já respondeu essa questão
             const alreadyAnswered = answers.some(a => a.questionId === currentQ.id);
             if (alreadyAnswered) {
                 showToast("Você já respondeu esta questão. Vá para a próxima.", "info");
                 return;
             }
             const isCorrect = (choice === currentQ.answer);
-            const newAnswer = {
+            answers.push({
                 questionId: currentQ.id,
                 isCorrect: isCorrect,
                 userChoice: choice,
                 timestamp: Date.now()
-            };
-            answers.push(newAnswer);
-            // Inicializar comentário como não visível
+            });
             commentVisibleMap.set(currentQ.id, false);
             saveToLocalStorage();
-            renderAll();  // atualiza view com feedback e botão de comentário
+            renderAll();
         }
         
         function showCommentForCurrent() {
             if (questions.length === 0) return;
             const q = questions[currentIndex];
             if (!q) return;
-            // verificar se já respondeu
             const hasAnswered = answers.some(a => a.questionId === q.id);
             if (!hasAnswered) {
                 showToast("Responda a questão primeiro para ver o comentário.", "info");
@@ -378,7 +382,7 @@ Gabarito: Errado'></textarea>
             }
         }
         
-        // ---------- Renderização do Dashboard + Gráfico (Chart.js) ----------
+        // ---------- Renderização do Dashboard com gráfico ----------
         let statsChart = null;
         function renderDashboard() {
             const stats = computeStats();
@@ -396,7 +400,6 @@ Gabarito: Errado'></textarea>
                 ${questions.length > 0 ? `<div class="text-center text-xs text-gray-400 mt-2">Total de questões: ${questions.length}</div>` : ''}
             `;
             dashboardContainer.innerHTML = htmlStats;
-            // Destruir gráfico antigo se existir
             if (statsChart) statsChart.destroy();
             const ctx = document.getElementById('statsPieChart')?.getContext('2d');
             if (ctx && (stats.totalCorrect + stats.totalWrong) > 0) {
@@ -411,19 +414,14 @@ Gabarito: Errado'></textarea>
                             hoverOffset: 8
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
-                    }
+                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
                 });
             } else if (ctx) {
-                // caso sem dados, mostrar gráfico vazio
                 statsChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Nenhum dado'], datasets: [{ data: [1], backgroundColor: ['#e2e8f0'] }] }, options: { plugins: { legend: { display: false } } } });
             }
         }
         
-        // ---------- Renderização da questão ativa ----------
+        // ---------- Renderização da questão ativa (com separação clara) ----------
         function renderQuestion() {
             if (!questions.length) {
                 questionPanel.innerHTML = `
@@ -461,19 +459,16 @@ Gabarito: Errado'></textarea>
             
             const html = `
                 <div class="animate-slide-up">
-                    <!-- Barra de progresso -->
                     <div class="mb-5">
                         <div class="flex justify-between text-sm text-gray-600 mb-1"><span>Progresso</span><span>${currentIndex + (hasAnswered ? 1 : 0)}/${total}</span></div>
                         <div class="h-2 bg-gray-100 rounded-full overflow-hidden"><div class="progress-bar h-full bg-green-500 rounded-full" style="width: ${progressPercent}%"></div></div>
                     </div>
-                    <!-- Header questão -->
                     <div class="flex justify-between items-start mb-4 pb-3 border-b border-gray-100">
                         <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full"><i class="far fa-file-alt mr-1"></i> Questão ${currentQ.number}</span>
                         <button id="resetOnlyFromQuestionBtn" class="text-gray-400 hover:text-gray-600 transition" title="Resetar progresso"><i class="fas fa-sync-alt"></i></button>
                     </div>
-                    <!-- Enunciado -->
+                    <!-- ENUNCIADO PURIFICADO: sem comentários ou gabaritos -->
                     <div class="mb-6 bg-gray-50 p-4 rounded-xl"><p class="text-gray-800 text-base md:text-lg leading-relaxed">${escapeHtml(currentQ.text)}</p></div>
-                    <!-- Área de respostas -->
                     <div id="answerArea">
                         ${!hasAnswered ? `
                             <div class="flex gap-4 mb-6">
@@ -489,7 +484,7 @@ Gabarito: Errado'></textarea>
             `;
             questionPanel.innerHTML = html;
             
-            // Atrelar eventos dinâmicos
+            // Eventos dinâmicos
             if (!hasAnswered) {
                 document.getElementById('btnCerto')?.addEventListener('click', () => answerCurrentQuestion('Certo'));
                 document.getElementById('btnErrado')?.addEventListener('click', () => answerCurrentQuestion('Errado'));
@@ -503,7 +498,6 @@ Gabarito: Errado'></textarea>
             if (resetQuestionBtn) resetQuestionBtn.addEventListener('click', () => resetProgressOnly());
         }
         
-        // helper escape HTML
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -511,8 +505,6 @@ Gabarito: Errado'></textarea>
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
             });
         }
         
@@ -532,36 +524,30 @@ Gabarito: Errado'></textarea>
             saveToLocalStorage();
         }
         
-        // Eventos principais
+        // ---------- Event listeners ----------
         importBtn.addEventListener('click', () => {
             const raw = rawInput.value;
             if (importQuestions(raw)) rawInput.value = '';
         });
         loadExampleBtn.addEventListener('click', () => {
-            const exampleText = `Questão 1: "O Sol é uma estrela anã amarela localizada no centro do sistema solar."
-
-Comentário: "O Sol é de fato uma estrela anã amarela e fonte de energia do sistema solar."
-
+            const example = `Questão 1: "Embora João de Barros tenha sido o donatário original da Capitania do Rio Grande por meio da Carta de Doação de 1535, a historiografia registra que ele jamais tomou posse física de suas terras, administrando-as por intermédio de um procurador."
+Comentário: "João de Barros enfrentou dificuldades financeiras e resistência indígena, nunca assumindo pessoalmente a capitania. O controle era exercido pelo procurador Antônio Pinheiro."
 Gabarito: Certo
 
-Questão 2: "A Lua é um planeta rochoso que orbita a Terra."
-
-Comentário: "A Lua é um satélite natural, não um planeta."
-
+Questão 2: "No contexto da ocupação holandesa na Capitania do Rio Grande no século XVII, o massacre de Uruaçu ocorreu cronologicamente antes do massacre de Cunhaú."
+Comentário: "O massacre de Cunhaú ocorreu em 16 de julho de 1645, enquanto o de Uruaçu aconteceu cerca de três meses depois, em outubro do mesmo ano."
 Gabarito: Errado
 
-Questão 3: "A Lei Áurea foi assinada pela Princesa Isabel em 1888, abolindo a escravidão no Brasil."
-
-Comentário: "Correto, a Lei Áurea (nº 3.353) foi sancionada em 13 de maio de 1888."
-
+Questão 3: "O sistema de sesmarias implementado para estimular a colonização da capitania previa que o sesmeiro teria a propriedade plena da terra desde que nela se fizesse produzir no prazo máximo de cinco anos."
+Comentário: "A legislação sesmarial estabelecia o prazo de cinco anos para a produção da terra, sob pena de o colono ser multado ou perder a sua doação territorial."
 Gabarito: Certo`;
-            rawInput.value = exampleText;
-            importQuestions(exampleText);
+            rawInput.value = example;
+            importQuestions(example);
         });
         resetProgressBtn.addEventListener('click', () => { if(questions.length) resetProgressOnly(); else showToast("Nenhuma questão importada.", "warning"); });
         clearAllBtn.addEventListener('click', () => { if(confirm("Tem certeza? Isso apagará todas as questões e respostas.")) clearAllData(); });
         
-        // Inicialização: carregar dados do localStorage e renderizar
+        // Inicialização
         loadFromLocalStorage();
         renderAll();
     </script>
