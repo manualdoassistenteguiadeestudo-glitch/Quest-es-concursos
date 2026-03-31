@@ -2,8 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>Questões CESPE/CEBRASPE | Treino Certo ou Errado + Disciplinas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Questões CESPE/CEBRASPE | Treino + Estatísticas + Tempo por Questão</title>
     <!-- Tailwind CSS + Font Awesome + Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -24,49 +24,63 @@
         }
     </script>
     <style>
-        body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); font-family: 'Inter', system-ui, sans-serif; }
-        .card-modern { transition: all 0.2s ease; }
-        .card-modern:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.08); }
+        body { background: linear-gradient(135deg, #f8fafc 0%, #eef2f8 100%); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+        .card-modern { transition: all 0.2s ease; background: white; border-radius: 1.5rem; }
+        .card-modern:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1); }
         .btn-certo { background: linear-gradient(135deg, #22c55e, #16a34a); }
         .btn-errado { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .progress-bar { transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .max-w-wide { max-width: 1600px; margin: 0 auto; }
         .break-word { word-break: break-word; }
+        /* Layout desktop duas colunas */
+        @media (min-width: 1024px) {
+            .desktop-layout {
+                display: grid;
+                grid-template-columns: 360px 1fr;
+                gap: 24px;
+                align-items: start;
+            }
+        }
+        /* Para garantir que os cards ocupem toda a largura da coluna */
+        .desktop-layout > * {
+            min-width: 0; /* Evita overflow em grids */
+        }
     </style>
 </head>
-<body>
+<body class="p-0 m-0">
 
-<div class="max-w-wide px-4 py-6 md:py-8 w-full">
-    <!-- Header -->
+<div class="w-full px-4 md:px-6 py-6 md:py-8">
+    <!-- Header com relógio -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-gray-200">
         <div class="flex items-center gap-4 flex-wrap">
             <div class="bg-gradient-to-br from-emerald-500 to-green-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
                 <i class="fas fa-check-double text-white text-xl"></i>
             </div>
-            <div class="hidden sm:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-full">
-                <i class="fas fa-file-alt text-green-600 text-lg"></i>
-                <i class="fas fa-arrow-right text-gray-400 text-sm"></i>
-                <i class="fas fa-pen-fancy text-blue-500 text-lg"></i>
-                <span class="text-xs font-medium text-gray-600">Modo simulado + disciplinas</span>
-            </div>
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Questões <span class="text-green-600">CESPE/CEBRASPE</span></h1>
-                <p class="text-gray-500 text-sm">Treine com estilo Certo ou Errado | até 20 questões</p>
+                <p class="text-gray-500 text-sm">Treine com estilo Certo/Errado | até 20 questões | tempo de resposta detalhado</p>
             </div>
         </div>
-        <div class="flex gap-2">
-            <button id="resetOnlyProgressBtn" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition shadow-sm flex items-center gap-2"><i class="fas fa-undo-alt"></i> Resetar progresso</button>
-            <button id="clearAllDataBtn" class="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-100 transition shadow-sm flex items-center gap-2"><i class="fas fa-trash-alt"></i> Limpar tudo</button>
+        <div class="flex items-center gap-4">
+            <!-- Relógio digital -->
+            <div class="bg-gray-100 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2">
+                <i class="fas fa-clock text-gray-600"></i>
+                <span id="currentTime" class="font-mono text-lg font-semibold text-gray-700">--:--:--</span>
+            </div>
+            <div class="flex gap-2">
+                <button id="resetOnlyProgressBtn" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition shadow-sm flex items-center gap-2"><i class="fas fa-undo-alt"></i> Resetar progresso</button>
+                <button id="clearAllDataBtn" class="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-100 transition shadow-sm flex items-center gap-2"><i class="fas fa-trash-alt"></i> Limpar tudo</button>
+            </div>
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-12 gap-6">
-        <!-- Sidebar esquerda (mais larga) -->
-        <div class="lg:col-span-5 space-y-6">
-            <!-- Card Importação com disciplina e PDF -->
+    <!-- Layout desktop: duas colunas com grid -->
+    <div class="desktop-layout">
+        <!-- Coluna esquerda (menu/importação) -->
+        <div class="space-y-6">
+            <!-- Card Importação -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-modern">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="bg-green-100 p-2 rounded-xl"><i class="fas fa-file-import text-green-600 text-lg"></i></div>
@@ -75,7 +89,6 @@
                         <p class="text-xs text-gray-500">Formato: Questão X: enunciado + Comentário: + Gabarito: Certo/Errado</p>
                     </div>
                 </div>
-                <!-- Seletor de disciplina para importação -->
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Disciplina padrão para importação</label>
                     <select id="disciplineSelect" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-green-400">
@@ -99,7 +112,7 @@
                         <option value="Geografia do Rio Grande do Norte">Geografia do Rio Grande do Norte</option>
                     </select>
                 </div>
-                <textarea id="rawQuestionsInput" rows="6" class="w-full border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-400 focus:outline-none transition" placeholder='Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."
+                <textarea id="rawQuestionsInput" rows="5" class="w-full border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-400 focus:outline-none transition" placeholder='Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."
 
 Comentário: "Adotada pela ONU em 10 de dezembro de 1948."
 
@@ -114,16 +127,16 @@ Gabarito: Certo'></textarea>
                 <div class="text-xs text-gray-400 mt-2 flex justify-between"><span>Máx. 20 questões</span><span id="questionCounter">0/20 carregadas</span></div>
             </div>
 
-            <!-- Dashboard -->
+            <!-- Dashboard desempenho + gráfico -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-modern">
                 <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
                     <div class="flex items-center gap-2"><i class="fas fa-chart-line text-blue-500 text-lg"></i><h2 class="font-bold text-gray-800">Meu desempenho</h2></div>
-                    <button id="generatePdfReportBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm px-3 py-1.5 rounded-lg transition flex items-center gap-1"><i class="fas fa-file-pdf"></i> Relatório PDF</button>
+                    <button id="generatePdfReportBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm px-3 py-1.5 rounded-lg transition flex items-center gap-1"><i class="fas fa-file-pdf"></i> Relatório completo</button>
                 </div>
                 <div id="dashboardContainer"><div class="text-center py-8 text-gray-400"><i class="fas fa-chart-simple text-3xl mb-2 block"></i> Nenhuma questão respondida ainda</div></div>
             </div>
 
-            <!-- NOVO: Cronômetro de Estudo -->
+            <!-- Cronômetro de Estudo -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-modern">
                 <div class="flex items-center gap-2 mb-3">
                     <i class="fas fa-hourglass-half text-amber-600 text-lg"></i>
@@ -136,11 +149,11 @@ Gabarito: Certo'></textarea>
                         <button id="timerPauseBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-xl text-sm font-medium flex items-center gap-2"><i class="fas fa-pause"></i> Pausar</button>
                         <button id="timerStopBtn" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl text-sm font-medium flex items-center gap-2"><i class="fas fa-stop"></i> Parar</button>
                     </div>
-                    <p class="text-xs text-gray-400 mt-3">Registre o tempo total de estudo. Use Iniciar, Pausar e Parar (zerar).</p>
+                    <p class="text-xs text-gray-400 mt-3">Registre o tempo total de estudo (manual). O relatório de questões usa tempo por resposta automático.</p>
                 </div>
             </div>
 
-            <!-- NOVO: Ferramentas adicionais (Caderno de Erros + NotebookLM) -->
+            <!-- Ferramentas de Revisão -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-modern">
                 <div class="flex items-center gap-2 mb-4">
                     <i class="fas fa-tools text-purple-600"></i>
@@ -150,13 +163,13 @@ Gabarito: Certo'></textarea>
                     <button id="downloadWrongAnswersBtn" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-rose-200"><i class="fas fa-book-open"></i> Caderno de Erros (PDF)</button>
                     <button id="downloadNotebookLMBtn" class="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-sky-200"><i class="fas fa-download"></i> Prompt NotebookLM</button>
                 </div>
-                <p class="text-xs text-gray-400 mt-3 text-center">Caderno de Erros: apenas questões erradas + comentários.<br>Prompt: exporta todas as questões para estudo no Google NotebookLM.</p>
+                <p class="text-xs text-gray-400 mt-3 text-center">Caderno de Erros: apenas questões erradas + comentários (nenhuma informação extra).<br>Prompt: exporta todas as questões para estudo no Google NotebookLM.</p>
             </div>
         </div>
 
-        <!-- Coluna direita: Questão ativa (largura expandida) -->
-        <div class="lg:col-span-7">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6 card-modern min-h-[550px] transition-all" id="questionPanel">
+        <!-- Coluna direita: Questão ativa -->
+        <div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-7 card-modern min-h-[600px] transition-all" id="questionPanel">
                 <div class="flex flex-col items-center justify-center py-12 text-gray-400">
                     <i class="fas fa-brain text-5xl mb-3 text-gray-300"></i>
                     <p class="text-center">Importe ou selecione questões<br>para começar a treinar</p>
@@ -179,11 +192,12 @@ Gabarito: Certo'></textarea>
     ];
     
     let questions = [];            // { id, number, text, comment, answer, discipline }
-    let answers = [];              // { questionId, isCorrect, userChoice, timestamp }
+    let answers = [];              // { questionId, isCorrect, userChoice, timestamp, timeSpentSeconds }
     let currentIndex = 0;
     let commentVisibleMap = new Map();   // questionId -> bool
+    let questionStartTimes = new Map();    // questionId -> timestamp (ms) when first displayed
     
-    // Variáveis do cronômetro
+    // Cronômetro global
     let timerInterval = null;
     let timerSeconds = 0;
     let timerRunning = false;
@@ -208,26 +222,37 @@ Gabarito: Certo'></textarea>
     const timerStopBtn = document.getElementById('timerStopBtn');
     const downloadWrongAnswersBtn = document.getElementById('downloadWrongAnswersBtn');
     const downloadNotebookLMBtn = document.getElementById('downloadNotebookLMBtn');
+    const currentTimeSpan = document.getElementById('currentTime');
     
-    // pdf.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    
+    // ---------- Relógio atual ----------
+    function updateCurrentTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        currentTimeSpan.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateCurrentTime, 1000);
+    updateCurrentTime();
     
     // ---------- localStorage ----------
     function saveToLocalStorage() {
-        localStorage.setItem('cebraspe_questions_v2', JSON.stringify(questions));
-        localStorage.setItem('cebraspe_answers_v2', JSON.stringify(answers));
-        localStorage.setItem('cebraspe_currentIndex_v2', currentIndex.toString());
-        localStorage.setItem('cebraspe_commentsVisible_v2', JSON.stringify([...commentVisibleMap.entries()]));
-        // Salvar estado do cronômetro (opcional)
+        localStorage.setItem('cebraspe_questions_v3', JSON.stringify(questions));
+        localStorage.setItem('cebraspe_answers_v3', JSON.stringify(answers));
+        localStorage.setItem('cebraspe_currentIndex_v3', currentIndex.toString());
+        localStorage.setItem('cebraspe_commentsVisible_v3', JSON.stringify([...commentVisibleMap.entries()]));
         localStorage.setItem('cebraspe_timerSeconds', timerSeconds.toString());
         localStorage.setItem('cebraspe_timerRunning', timerRunning.toString());
+        // Não salvamos startTimes pois são recalculados ao renderizar
     }
     
     function loadFromLocalStorage() {
-        const storedQuestions = localStorage.getItem('cebraspe_questions_v2');
-        const storedAnswers = localStorage.getItem('cebraspe_answers_v2');
-        const storedIndex = localStorage.getItem('cebraspe_currentIndex_v2');
-        const storedComments = localStorage.getItem('cebraspe_commentsVisible_v2');
+        const storedQuestions = localStorage.getItem('cebraspe_questions_v3');
+        const storedAnswers = localStorage.getItem('cebraspe_answers_v3');
+        const storedIndex = localStorage.getItem('cebraspe_currentIndex_v3');
+        const storedComments = localStorage.getItem('cebraspe_commentsVisible_v3');
         if (storedQuestions) questions = JSON.parse(storedQuestions);
         if (storedAnswers) answers = JSON.parse(storedAnswers);
         if (storedIndex) currentIndex = parseInt(storedIndex, 10);
@@ -237,32 +262,32 @@ Gabarito: Certo'></textarea>
         if (currentIndex < 0) currentIndex = 0;
         updateCounterDisplay();
         
-        // Carregar estado do cronômetro
         const storedSeconds = localStorage.getItem('cebraspe_timerSeconds');
         const storedRunning = localStorage.getItem('cebraspe_timerRunning');
         if (storedSeconds) timerSeconds = parseInt(storedSeconds, 10);
         if (storedRunning === 'true') {
-            // Se estava rodando, recriar intervalo com cuidado
             timerRunning = true;
             startTimerInterval();
         } else {
             timerRunning = false;
         }
         updateTimerDisplay();
+        // Reset questionStartTimes (serão preenchidos no render)
+        questionStartTimes.clear();
     }
     
     function clearAllData() {
-        localStorage.removeItem('cebraspe_questions_v2');
-        localStorage.removeItem('cebraspe_answers_v2');
-        localStorage.removeItem('cebraspe_currentIndex_v2');
-        localStorage.removeItem('cebraspe_commentsVisible_v2');
+        localStorage.removeItem('cebraspe_questions_v3');
+        localStorage.removeItem('cebraspe_answers_v3');
+        localStorage.removeItem('cebraspe_currentIndex_v3');
+        localStorage.removeItem('cebraspe_commentsVisible_v3');
         localStorage.removeItem('cebraspe_timerSeconds');
         localStorage.removeItem('cebraspe_timerRunning');
         questions = [];
         answers = [];
         currentIndex = 0;
         commentVisibleMap.clear();
-        // Resetar cronômetro também
+        questionStartTimes.clear();
         resetTimer();
         renderAll();
         showToast("Todos os dados foram apagados.", "info");
@@ -273,12 +298,13 @@ Gabarito: Certo'></textarea>
         answers = [];
         currentIndex = 0;
         commentVisibleMap.clear();
+        questionStartTimes.clear();
         saveToLocalStorage();
         renderAll();
         showToast("Progresso resetado. Todas as respostas foram removidas.", "success");
     }
     
-    // ---------- PARSER (enunciado, comentário, gabarito) ----------
+    // ---------- PARSER ----------
     function parseQuestionsFromText(text) {
         const questionsArray = [];
         const blockRegex = /Questão\s+(\d+):\s*([\s\S]*?)(?=Questão\s+\d+:|$)/gi;
@@ -308,7 +334,7 @@ Gabarito: Certo'></textarea>
                 questionsArray.push({ id: Date.now() + Math.random() * 10000 + number, number, text: questionText, comment, answer });
             }
         }
-        // fallback simples
+        // fallback
         if (questionsArray.length === 0 && text.includes('Questão')) {
             const lines = text.split(/\r?\n/);
             let current = null;
@@ -334,63 +360,82 @@ Gabarito: Certo'></textarea>
         return questionsArray.map((q, idx) => ({ ...q, id: idx+1, comment: q.comment || "Sem comentário disponível." }));
     }
     
-    // Importar com limite e disciplina
     function importQuestions(rawText, disciplineOverride = null) {
         if (!rawText.trim()) { showToast("Cole o texto das questões.", "warning"); return false; }
         let parsed = parseQuestionsFromText(rawText);
-        if (parsed.length === 0) { showToast("Nenhuma questão válida encontrada. Use o formato padrão.", "error"); return false; }
-        if (parsed.length > MAX_QUESTIONS) { showToast(`Limite de ${MAX_QUESTIONS} questões excedido. Foram encontradas ${parsed.length}.`, "error"); return false; }
+        if (parsed.length === 0) { showToast("Nenhuma questão válida encontrada.", "error"); return false; }
+        if (parsed.length > MAX_QUESTIONS) { showToast(`Limite de ${MAX_QUESTIONS} questões excedido.`, "error"); return false; }
         const discipline = disciplineOverride !== null ? disciplineOverride : disciplineSelect.value;
         parsed = parsed.map(q => ({ ...q, discipline: discipline }));
         questions = parsed;
         answers = [];
         currentIndex = 0;
         commentVisibleMap.clear();
+        questionStartTimes.clear();
         saveToLocalStorage();
         renderAll();
+        // Limpa o textarea para evitar que o usuário veja os gabaritos
+        rawInput.value = '';
         showToast(`${parsed.length} questões importadas com disciplina: ${discipline}`, "success");
         return true;
     }
     
-    // Extrair PDF
     async function extractTextFromPDF(file) {
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                const pageText = textContent.items.map(item => item.str).join(" ");
-                fullText += pageText + "\n";
-            }
-            return fullText;
-        } catch (err) { throw new Error("Erro ao extrair PDF: " + err.message); }
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+        }
+        return fullText;
     }
     
     async function importFromPdf(file) {
         showToast("Extraindo texto do PDF... aguarde.", "info");
         try {
             const extracted = await extractTextFromPDF(file);
-            if (!extracted.trim()) throw new Error("Nenhum texto encontrado no PDF.");
+            if (!extracted.trim()) throw new Error("Nenhum texto encontrado.");
             rawInput.value = extracted;
             importQuestions(extracted);
         } catch (err) { showToast(err.message, "error"); }
     }
     
-    // Ações de resposta
+    // Registrar tempo de exibição da questão (se não respondida)
+    function recordDisplayTimeForCurrentQuestion() {
+        if (!questions.length) return;
+        const q = questions[currentIndex];
+        if (!answers.some(a => a.questionId === q.id)) {
+            if (!questionStartTimes.has(q.id)) {
+                questionStartTimes.set(q.id, Date.now());
+            }
+        }
+    }
+    
+    // Resposta com tempo gasto
     function answerCurrentQuestion(choice) {
         if (questions.length === 0) return;
         const currentQ = questions[currentIndex];
         if (answers.some(a => a.questionId === currentQ.id)) { showToast("Você já respondeu esta questão.", "info"); return; }
+        let timeSpent = 0;
+        const startTime = questionStartTimes.get(currentQ.id);
+        if (startTime) {
+            timeSpent = Math.round((Date.now() - startTime) / 1000); // segundos
+        }
         const isCorrect = (choice === currentQ.answer);
-        answers.push({ questionId: currentQ.id, isCorrect, userChoice: choice, timestamp: Date.now() });
+        answers.push({ 
+            questionId: currentQ.id, 
+            isCorrect, 
+            userChoice: choice, 
+            timestamp: Date.now(),
+            timeSpentSeconds: timeSpent
+        });
         commentVisibleMap.set(currentQ.id, false);
         saveToLocalStorage();
         renderAll();
-        // Se acabaram todas as questões, notificar (opcional)
         if (answers.length === questions.length) {
-            showToast("🎉 Parabéns! Você respondeu todas as questões! Use o cronômetro para ver seu tempo total.", "success");
+            showToast("🎉 Parabéns! Você respondeu todas as questões! Tempo total registrado no relatório.", "success");
         }
     }
     
@@ -407,14 +452,15 @@ Gabarito: Certo'></textarea>
         if (!questions.length) return;
         const currentQ = questions[currentIndex];
         if (!answers.some(a => a.questionId === currentQ.id)) { showToast("Responda a questão atual antes de avançar.", "warning"); return; }
-        if (currentIndex + 1 < questions.length) { currentIndex++; renderAll(); }
-        else { showToast("🏆 Você concluiu todas as questões! Parabéns!", "success"); }
+        if (currentIndex + 1 < questions.length) {
+            currentIndex++;
+            renderAll();
+        } else { showToast("🏆 Você concluiu todas as questões! Parabéns!", "success"); }
     }
     
     function updateDisciplineForCurrent(newDiscipline) {
         if (!questions.length) return;
-        const q = questions[currentIndex];
-        q.discipline = newDiscipline;
+        questions[currentIndex].discipline = newDiscipline;
         saveToLocalStorage();
         renderAll();
         showToast(`Disciplina alterada para ${newDiscipline}`, "success");
@@ -429,7 +475,6 @@ Gabarito: Certo'></textarea>
         return { totalAnswered, totalCorrect, totalWrong, percentage };
     }
     
-    // Gráfico
     let statsChart = null;
     function renderDashboard() {
         const stats = computeStats();
@@ -454,7 +499,6 @@ Gabarito: Certo'></textarea>
     
     function updateCounterDisplay() { questionCounterSpan.innerText = `${questions.length}/${MAX_QUESTIONS}`; }
     
-    // Renderização da questão (com edição de disciplina)
     function renderQuestion() {
         if (!questions.length) {
             questionPanel.innerHTML = `<div class="flex flex-col items-center justify-center py-12 text-gray-400"><i class="fas fa-inbox text-5xl mb-3"></i><p class="text-center font-medium">Nenhuma questão carregada</p><p class="text-sm text-center mt-1">Importe questões ao lado para iniciar os treinos.</p></div>`;
@@ -477,7 +521,6 @@ Gabarito: Certo'></textarea>
         
         const nextDisabled = !hasAnswered;
         const nextButtonText = (currentIndex + 1 >= total) ? '🏁 Finalizar simulado' : 'Próxima questão →';
-        
         const disciplineOptions = DISCIPLINAS.map(d => `<option value="${d}" ${currentQ.discipline === d ? 'selected' : ''}>${d}</option>`).join('');
         
         const html = `
@@ -487,7 +530,7 @@ Gabarito: Certo'></textarea>
                     <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full"><i class="far fa-file-alt mr-1"></i> Questão ${currentQ.number}</span>
                     <div class="flex items-center gap-2"><label class="text-xs text-gray-500">Disciplina:</label><select id="disciplineEditSelect" class="text-xs border rounded-lg p-1 bg-white">${disciplineOptions}</select><button id="saveDisciplineBtn" class="text-blue-500 hover:text-blue-700 text-xs"><i class="fas fa-save"></i></button><button id="resetOnlyFromQuestionBtn" class="text-gray-400 hover:text-gray-600" title="Resetar progresso"><i class="fas fa-sync-alt"></i></button></div>
                 </div>
-                <div class="mb-6 bg-gray-50 p-4 rounded-xl"><p class="text-gray-800 text-base md:text-lg leading-relaxed break-word">${escapeHtml(currentQ.text)}</p></div>
+                <div class="mb-6 bg-gray-50 p-5 rounded-xl"><p class="text-gray-800 text-base md:text-lg leading-relaxed break-word">${escapeHtml(currentQ.text)}</p></div>
                 <div id="answerArea">
                     ${!hasAnswered ? `<div class="flex gap-4 mb-6"><button id="btnCerto" class="flex-1 btn-certo text-white font-bold py-4 rounded-xl text-lg flex items-center justify-center gap-2 shadow-md"><i class="fas fa-check-circle"></i> Certo</button><button id="btnErrado" class="flex-1 btn-errado text-white font-bold py-4 rounded-xl text-lg flex items-center justify-center gap-2 shadow-md"><i class="fas fa-times-circle"></i> Errado</button></div>` : feedbackHtml}
                     ${commentSection}
@@ -509,135 +552,62 @@ Gabarito: Certo'></textarea>
         const saveDiscBtn = document.getElementById('saveDisciplineBtn');
         const discSelect = document.getElementById('disciplineEditSelect');
         if (saveDiscBtn && discSelect) saveDiscBtn.addEventListener('click', () => updateDisciplineForCurrent(discSelect.value));
+        
+        // Registrar tempo de início para a questão atual se ainda não respondida
+        if (!hasAnswered) recordDisplayTimeForCurrentQuestion();
     }
     
-    // ---------- Funções do Cronômetro ----------
+    // ---------- Cronômetro ----------
     function updateTimerDisplay() {
         const hours = Math.floor(timerSeconds / 3600);
         const minutes = Math.floor((timerSeconds % 3600) / 60);
         const secs = timerSeconds % 60;
         timerDisplaySpan.textContent = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     }
+    function startTimerInterval() { if (timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if (timerRunning) { timerSeconds++; updateTimerDisplay(); saveToLocalStorage(); } }, 1000); }
+    function startTimer() { if (timerRunning) return; timerRunning = true; if (!timerInterval) startTimerInterval(); saveToLocalStorage(); showToast("Cronômetro iniciado!", "success"); }
+    function pauseTimer() { if (!timerRunning) return; timerRunning = false; saveToLocalStorage(); showToast("Cronômetro pausado.", "info"); }
+    function resetTimer() { timerRunning = false; if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } timerSeconds = 0; updateTimerDisplay(); saveToLocalStorage(); showToast("Cronômetro zerado.", "info"); }
     
-    function startTimerInterval() {
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (timerRunning) {
-                timerSeconds++;
-                updateTimerDisplay();
-                saveToLocalStorage(); // salva estado do timer também
-            }
-        }, 1000);
-    }
-    
-    function startTimer() {
-        if (timerRunning) return;
-        timerRunning = true;
-        if (!timerInterval) startTimerInterval();
-        saveToLocalStorage();
-        showToast("Cronômetro iniciado!", "success");
-    }
-    
-    function pauseTimer() {
-        if (!timerRunning) return;
-        timerRunning = false;
-        saveToLocalStorage();
-        showToast("Cronômetro pausado.", "info");
-    }
-    
-    function resetTimer() {
-        timerRunning = false;
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        timerSeconds = 0;
-        updateTimerDisplay();
-        saveToLocalStorage();
-        showToast("Cronômetro zerado.", "info");
-    }
-    
-    // ---------- Caderno de Erros (PDF apenas com erros) ----------
+    // ---------- PDF Caderno de Erros (apenas erros + comentários) ----------
     async function generateWrongAnswersPDF() {
         if (questions.length === 0) { showToast("Nenhuma questão importada.", "warning"); return; }
         const wrongAnswers = answers.filter(a => a.isCorrect === false);
-        if (wrongAnswers.length === 0) { showToast("Você não errou nenhuma questão até o momento! 🎉", "success"); return; }
-        
-        const wrongQuestions = wrongAnswers.map(wa => {
-            const q = questions.find(qq => qq.id === wa.questionId);
-            return { ...q, userChoice: wa.userChoice };
-        });
-        
-        const doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        if (wrongAnswers.length === 0) { showToast("Você não errou nenhuma questão! 🎉", "success"); return; }
+        const doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         doc.setFont("helvetica");
         doc.setFontSize(18);
-        doc.text("Caderno de Erros - Questões CESPE/CEBRASPE", 14, 20);
+        doc.text("Caderno de Erros - CESPE/CEBRASPE", 14, 20);
         doc.setFontSize(11);
-        doc.text(`Data: ${new Date().toLocaleString()}`, 14, 30);
-        doc.text(`Total de questões erradas: ${wrongAnswers.length}`, 14, 38);
-        
-        const tableData = [];
-        for (let q of wrongQuestions) {
-            tableData.push([
-                q.number,
-                q.discipline,
-                q.text.length > 80 ? q.text.substring(0,77)+"..." : q.text,
-                q.userChoice,
-                q.answer,
-                q.comment.length > 100 ? q.comment.substring(0,97)+"..." : q.comment
-            ]);
+        doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 30);
+        let y = 40;
+        for (let idx = 0; idx < wrongAnswers.length; idx++) {
+            const wa = wrongAnswers[idx];
+            const q = questions.find(qq => qq.id === wa.questionId);
+            if (!q) continue;
+            if (y > 260) { doc.addPage(); y = 20; }
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Questão ${q.number} (${q.discipline})`, 14, y);
+            y += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const textLines = doc.splitTextToSize(`Enunciado: ${q.text}`, 180);
+            doc.text(textLines, 14, y);
+            y += textLines.length * 5;
+            doc.text(`Sua resposta: ${wa.userChoice}  |  Gabarito: ${q.answer}`, 14, y);
+            y += 6;
+            doc.setFont(undefined, 'italic');
+            const commentLines = doc.splitTextToSize(`Comentário: ${q.comment}`, 180);
+            doc.text(commentLines, 14, y);
+            y += commentLines.length * 5 + 8;
+            doc.line(14, y-3, 200, y-3);
         }
-        doc.autoTable({
-            head: [["#", "Disciplina", "Enunciado (resumo)", "Sua resposta", "Gabarito", "Comentário"]],
-            body: tableData,
-            startY: 45,
-            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-            columnStyles: { 2: { cellWidth: 50 }, 5: { cellWidth: 45 } },
-            margin: { left: 10, right: 10 }
-        });
         doc.save(`caderno_erros_${new Date().toISOString().slice(0,19)}.pdf`);
-        showToast("Caderno de Erros gerado com sucesso!", "success");
+        showToast("Caderno de Erros gerado (apenas erros + comentários).", "success");
     }
     
-    // ---------- Prompt para Google NotebookLM ----------
-    function generateNotebookLMPrompt() {
-        if (questions.length === 0) { showToast("Nenhuma questão para exportar.", "warning"); return; }
-        const stats = computeStats();
-        let promptText = `# PROMPT PARA GOOGLE NOTEBOOKLM - ESTUDO CESPE/CEBRASPE\n\n`;
-        promptText += `## Resumo do desempenho:\n`;
-        promptText += `- Total de questões respondidas: ${stats.totalAnswered}\n`;
-        promptText += `- Acertos: ${stats.totalCorrect}\n`;
-        promptText += `- Erros: ${stats.totalWrong}\n`;
-        promptText += `- Aproveitamento: ${stats.percentage}%\n\n`;
-        promptText += `## Lista de todas as questões (com enunciado, gabarito e comentário):\n\n`;
-        
-        for (let i = 0; i < questions.length; i++) {
-            const q = questions[i];
-            const userResp = answers.find(a => a.questionId === q.id);
-            const respStatus = userResp ? (userResp.isCorrect ? "Acertou" : "Errou") : "Não respondida";
-            const userChoice = userResp ? userResp.userChoice : "—";
-            promptText += `### Questão ${q.number} - ${q.discipline}\n`;
-            promptText += `**Enunciado:** ${q.text}\n`;
-            promptText += `**Gabarito:** ${q.answer}\n`;
-            promptText += `**Sua resposta:** ${userChoice} (${respStatus})\n`;
-            promptText += `**Comentário:** ${q.comment}\n\n`;
-        }
-        promptText += `\n## Instrução para o NotebookLM:\n`;
-        promptText += `Analise estas questões no estilo CESPE/CEBRASPE (certo/errado). Para cada uma, explique o motivo do gabarito e aponte os principais conceitos cobrados. Dê dicas de estudo focadas nas bancas.`;
-        
-        const blob = new Blob([promptText], { type: "text/plain" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = `prompt_notebooklm_${new Date().toISOString().slice(0,19)}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        showToast("Prompt para NotebookLM baixado!", "success");
-    }
-    
-    // Gerar PDF com relatório completo (já existente)
+    // Relatório completo com tempo gasto por questão
     async function generatePDFReport() {
         if (questions.length === 0) { showToast("Nenhuma questão para gerar relatório.", "warning"); return; }
         const stats = computeStats();
@@ -647,33 +617,56 @@ Gabarito: Certo'></textarea>
         doc.text("Relatório de Desempenho - Questões CESPE/CEBRASPE", 14, 20);
         doc.setFontSize(11);
         doc.text(`Data: ${new Date().toLocaleString()}`, 14, 30);
-        doc.text(`Total de questões respondidas: ${stats.totalAnswered}`, 14, 38);
-        doc.text(`Acertos: ${stats.totalCorrect} | Erros: ${stats.totalWrong} | Aproveitamento: ${stats.percentage}%`, 14, 46);
+        doc.text(`Total respondidas: ${stats.totalAnswered} | Acertos: ${stats.totalCorrect} | Erros: ${stats.totalWrong} | Aproveitamento: ${stats.percentage}%`, 14, 38);
+        const totalTimeSec = answers.reduce((sum, a) => sum + (a.timeSpentSeconds || 0), 0);
+        const totalTimeStr = `${Math.floor(totalTimeSec/60)}min ${totalTimeSec%60}s`;
+        doc.text(`Tempo total gasto nas respostas: ${totalTimeStr}`, 14, 46);
         
-        const tableData = [];
-        const answeredMap = new Map(answers.map(a => [a.questionId, a]));
-        for (let q of questions) {
-            const resp = answeredMap.get(q.id);
-            if (!resp) continue;
-            const resultado = resp.isCorrect ? "Acertou" : "Errou";
-            const userChoice = resp.userChoice;
-            const gabarito = q.answer;
-            let enunciadoResumido = q.text.length > 90 ? q.text.substring(0, 87) + "..." : q.text;
-            tableData.push([q.number, q.discipline, enunciadoResumido, userChoice, gabarito, resultado, q.comment.substring(0, 80)]);
-        }
-        if (tableData.length === 0) { doc.text("Nenhuma questão respondida até o momento.", 14, 60); }
+        const answeredList = answers.map(a => ({ ...a, question: questions.find(q => q.id === a.questionId) })).filter(item => item.question);
+        const tableData = answeredList.map(item => [
+            item.question.number,
+            item.question.discipline,
+            item.question.text.length > 70 ? item.question.text.substring(0,67)+"..." : item.question.text,
+            item.userChoice,
+            item.question.answer,
+            item.isCorrect ? "Acertou" : "Errou",
+            item.timeSpentSeconds ? `${item.timeSpentSeconds}s` : "—",
+            item.question.comment.substring(0, 60)
+        ]);
+        if (tableData.length === 0) { doc.text("Nenhuma questão respondida.", 14, 60); }
         else {
             doc.autoTable({
-                head: [["#", "Disciplina", "Enunciado", "Sua resp.", "Gabarito", "Resultado", "Comentário (resumo)"]],
+                head: [["#", "Disciplina", "Enunciado", "Sua resp.", "Gabarito", "Resultado", "Tempo", "Comentário"]],
                 body: tableData,
                 startY: 55,
-                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-                columnStyles: { 2: { cellWidth: 45 }, 6: { cellWidth: 40 } },
-                margin: { left: 10, right: 10 }
+                styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
+                columnStyles: { 2: { cellWidth: 40 }, 7: { cellWidth: 35 } },
+                margin: { left: 8, right: 8 }
             });
         }
         doc.save(`relatorio_cebraspe_${new Date().toISOString().slice(0,19)}.pdf`);
-        showToast("Relatório PDF gerado com sucesso!", "success");
+        showToast("Relatório PDF com tempo por questão gerado!", "success");
+    }
+    
+    function generateNotebookLMPrompt() {
+        if (questions.length === 0) { showToast("Nenhuma questão para exportar.", "warning"); return; }
+        const stats = computeStats();
+        let promptText = `# PROMPT PARA GOOGLE NOTEBOOKLM - ESTUDO CESPE/CEBRASPE\n\n## Resumo:\n- Respondidas: ${stats.totalAnswered} | Acertos: ${stats.totalCorrect} | Erros: ${stats.totalWrong} | Aproveitamento: ${stats.percentage}%\n\n## Lista de questões:\n\n`;
+        for (let q of questions) {
+            const userResp = answers.find(a => a.questionId === q.id);
+            const respStatus = userResp ? (userResp.isCorrect ? "Acertou" : "Errou") : "Não respondida";
+            const userChoice = userResp ? userResp.userChoice : "—";
+            promptText += `### Questão ${q.number} - ${q.discipline}\nEnunciado: ${q.text}\nGabarito: ${q.answer}\nSua resposta: ${userChoice} (${respStatus})\nComentário: ${q.comment}\n\n`;
+        }
+        promptText += `\nInstrução: Analise estilo CESPE, explique cada gabarito e destaque conceitos.`;
+        const blob = new Blob([promptText], { type: "text/plain" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = `prompt_notebooklm_${new Date().toISOString().slice(0,19)}.txt`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast("Prompt para NotebookLM baixado!", "success");
     }
     
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
@@ -689,28 +682,17 @@ Gabarito: Certo'></textarea>
     // Eventos
     importBtn.addEventListener('click', () => { const raw = rawInput.value; if (importQuestions(raw)) rawInput.value = ''; });
     loadExampleBtn.addEventListener('click', () => {
-        const example = `Questão 1: "Embora João de Barros tenha sido o donatário original da Capitania do Rio Grande por meio da Carta de Doação de 1535, a historiografia registra que ele jamais tomou posse física de suas terras, administrando-as por intermédio de um procurador."
-Comentário: "João de Barros enfrentou dificuldades financeiras e resistência indígena, nunca assumindo pessoalmente a capitania."
-Gabarito: Certo
-
-Questão 2: "No contexto da ocupação holandesa na Capitania do Rio Grande no século XVII, o massacre de Uruaçu ocorreu cronologicamente antes do massacre de Cunhaú."
-Comentário: "O massacre de Cunhaú ocorreu em 16 de julho de 1645, enquanto o de Uruaçu aconteceu cerca de três meses depois."
-Gabarito: Errado
-
-Questão 3: "O sistema de sesmarias implementado para estimular a colonização da capitania previa que o sesmeiro teria a propriedade plena da terra desde que nela se fizesse produzir no prazo máximo de cinco anos."
-Comentário: "A legislação sesmarial estabelecia o prazo de cinco anos para a produção da terra, sob pena de perda."
-Gabarito: Certo`;
+        const example = `Questão 1: "Embora João de Barros tenha sido o donatário original da Capitania do Rio Grande por meio da Carta de Doação de 1535, a historiografia registra que ele jamais tomou posse física de suas terras, administrando-as por intermédio de um procurador."\nComentário: "João de Barros enfrentou dificuldades financeiras e resistência indígena, nunca assumindo pessoalmente a capitania."\nGabarito: Certo\n\nQuestão 2: "No contexto da ocupação holandesa na Capitania do Rio Grande no século XVII, o massacre de Uruaçu ocorreu cronologicamente antes do massacre de Cunhaú."\nComentário: "O massacre de Cunhaú ocorreu em 16 de julho de 1645, enquanto o de Uruaçu aconteceu cerca de três meses depois."\nGabarito: Errado\n\nQuestão 3: "O sistema de sesmarias implementado para estimular a colonização da capitania previa que o sesmeiro teria a propriedade plena da terra desde que nela se fizesse produzir no prazo máximo de cinco anos."\nComentário: "A legislação sesmarial estabelecia o prazo de cinco anos para a produção da terra, sob pena de perda."\nGabarito: Certo`;
         rawInput.value = example;
         importQuestions(example, "História do Rio Grande do Norte");
     });
     resetProgressBtn.addEventListener('click', () => { if(questions.length) resetProgressOnly(); else showToast("Nenhuma questão importada.", "warning"); });
-    clearAllBtn.addEventListener('click', () => { if(confirm("Tem certeza? Isso apagará todas as questões, respostas e o cronômetro.")) clearAllData(); });
+    clearAllBtn.addEventListener('click', () => { if(confirm("Tem certeza? Isso apagará todas as questões, respostas e cronômetro.")) clearAllData(); });
     importPdfBtn.addEventListener('click', () => pdfUploadInput.click());
     pdfUploadInput.addEventListener('change', async (e) => { if(e.target.files.length) { await importFromPdf(e.target.files[0]); e.target.value = ''; } });
     generatePdfReportBtn.addEventListener('click', generatePDFReport);
     downloadWrongAnswersBtn.addEventListener('click', generateWrongAnswersPDF);
     downloadNotebookLMBtn.addEventListener('click', generateNotebookLMPrompt);
-    
     timerStartBtn.addEventListener('click', startTimer);
     timerPauseBtn.addEventListener('click', pauseTimer);
     timerStopBtn.addEventListener('click', resetTimer);
