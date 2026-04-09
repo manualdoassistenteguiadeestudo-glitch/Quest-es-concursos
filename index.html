@@ -1643,6 +1643,153 @@
         attachResetEvents();
         resetRodadaState();
     })();
+
+    // ================== NOVAS MELHORIAS GAMIFICAÇÃO (SEM QUEBRAR NADA) ==================
+    (function() {
+        // 1. Conversão Btcc → Real (exibe no mesmo elemento, sem remover o totalCoins)
+        function btccToReal(btcc) {
+            return (btcc * 0.0005).toFixed(2);
+        }
+
+        function updateCoinDisplaySafe() {
+            const el = document.getElementById("coinCounterDisplay");
+            if (!el) return;
+            // Obtém o totalCoins do sistema concursoCoins (variável global)
+            let totalCoins = 0;
+            if (typeof window.totalCoins !== 'undefined') totalCoins = window.totalCoins;
+            // Fallback: tenta obter do localStorage
+            if (!totalCoins) totalCoins = parseInt(localStorage.getItem("concursoCoins")) || 0;
+            
+            // Obtém os pontos (Btcc) do sistema original
+            let btcc = 0;
+            if (typeof points !== 'undefined') btcc = points;
+            const real = btccToReal(btcc);
+            // Atualiza o conteúdo: mantém o total de ConcursoCoins e adiciona Btcc + Real
+            el.innerHTML = `💰 ${totalCoins.toLocaleString()} <span style="font-size:0.7rem;opacity:0.7">(${btcc} Btcc ≈ R$ ${real})</span>`;
+            el.classList.add("coin-value-update");
+            setTimeout(() => el.classList.remove("coin-value-update"), 300);
+        }
+
+        // Integração segura: chamar updateCoinDisplaySafe sempre que os pontos forem atualizados
+        const originalUpdatePoints = window.updatePointsAndStreak;
+        if (originalUpdatePoints) {
+            window.updatePointsAndStreak = function() {
+                originalUpdatePoints();
+                updateCoinDisplaySafe();
+            };
+        }
+
+        // Também chamar ao carregar e quando as moedas concursoCoins forem atualizadas
+        setInterval(() => {
+            updateCoinDisplaySafe();
+        }, 1000);
+
+        // 2. Sistema de Sons (beeps via Web Audio)
+        let somAtivo = true;
+        let audioCtx = null;
+        function playBeep(freq, duration, volume = 0.2) {
+            if (!somAtivo) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                gain.gain.value = volume;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) { console.warn("Audio error", e); }
+        }
+        function playAcerto() { playBeep(880, 0.2, 0.3); }
+        function playErro() { playBeep(440, 0.3, 0.2); }
+        function playStreakBonus() { playBeep(1200, 0.15, 0.4); playBeep(1500, 0.15, 0.4); }
+
+        // Botão de som (adicionar no header)
+        const soundBtn = document.createElement("button");
+        soundBtn.id = "soundToggleBtnAdded";
+        soundBtn.className = "bg-white/5 hover:bg-white/10 text-current px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2";
+        soundBtn.innerHTML = somAtivo ? '<i class="fas fa-volume-up"></i> Som' : '<i class="fas fa-volume-mute"></i> Som';
+        const headerRight = document.querySelector(".app-header .flex.items-center.gap-2.flex-wrap");
+        if (headerRight && !document.getElementById("soundToggleBtnAdded")) {
+            headerRight.appendChild(soundBtn);
+            soundBtn.onclick = () => {
+                somAtivo = !somAtivo;
+                soundBtn.innerHTML = somAtivo ? '<i class="fas fa-volume-up"></i> Som' : '<i class="fas fa-volume-mute"></i> Som';
+                localStorage.setItem("somAtivoAuditor", somAtivo);
+            };
+            const savedSom = localStorage.getItem("somAtivoAuditor");
+            if (savedSom !== null) somAtivo = savedSom === "true";
+            soundBtn.innerHTML = somAtivo ? '<i class="fas fa-volume-up"></i> Som' : '<i class="fas fa-volume-mute"></i> Som';
+        }
+
+        // Interceptar responderQuestao para tocar sons
+        const originalResponder = window.responderQuestao;
+        if (originalResponder) {
+            window.responderQuestao = function(id, resposta) {
+                // Executa o original primeiro
+                originalResponder(id, resposta);
+                // Toca sons baseado no resultado
+                try {
+                    const q = window.questions?.find(qq => qq.id === id);
+                    if (q && q.responded) {
+                        const wasCorrect = (resposta === q.answer);
+                        if (wasCorrect) {
+                            playAcerto();
+                            // Verifica streak para som de bônus
+                            if (typeof streak !== 'undefined' && streak % 5 === 0 && streak > 0) {
+                                playStreakBonus();
+                            }
+                        } else {
+                            playErro();
+                        }
+                    }
+                } catch(e) { console.log("som error", e); }
+            };
+        }
+
+        // 3. Feedback visual rápido (popup de recompensa)
+        function showRewardSafe(msg) {
+            const popup = document.getElementById("rewardPopup");
+            const textSpan = document.getElementById("rewardText");
+            const iconSpan = document.getElementById("rewardIcon");
+            if (!popup || !textSpan) return;
+            textSpan.innerText = msg;
+            if (iconSpan) iconSpan.className = "reward-icon fas fa-coins";
+            popup.classList.remove("hide");
+            popup.classList.add("show");
+            clearTimeout(window._rewardTimeoutSafe);
+            window._rewardTimeoutSafe = setTimeout(() => {
+                popup.classList.remove("show");
+                popup.classList.add("hide");
+            }, 1500);
+        }
+
+        // Integrar feedback rápido no responderQuestao (sem atrapalhar o popup de final de rodada)
+        const originalResponderWithSound = window.responderQuestao;
+        if (originalResponderWithSound) {
+            window.responderQuestao = function(id, resposta) {
+                originalResponderWithSound(id, resposta);
+                try {
+                    const q = window.questions?.find(qq => qq.id === id);
+                    if (q && q.responded) {
+                        const wasCorrect = (resposta === q.answer);
+                        if (wasCorrect) {
+                            showRewardSafe("+ Btcc 💰");
+                        } else {
+                            showRewardSafe("Continue 🔁");
+                        }
+                    }
+                } catch(e) {}
+            };
+        }
+
+        // Inicialização: garantir que o display seja atualizado corretamente
+        setTimeout(() => {
+            updateCoinDisplaySafe();
+        }, 500);
+    })();
 </script>
 </body>
 </html>
