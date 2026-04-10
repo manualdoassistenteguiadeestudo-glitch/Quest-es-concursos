@@ -145,9 +145,9 @@
         @media (max-width: 768px) { .coin-notification { font-size: 0.9rem; padding: 0.5rem 1rem; white-space: nowrap; } }
         .splash-screen { position: fixed; inset: 0; background-color: var(--bg-primary); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; font-family: 'Poppins', sans-serif; }
         .splash-screen.fade-out { opacity: 0; pointer-events: none; }
-        .spinner-img { width: 120px; height: 120px; animation: spin 2s linear infinite, pulse 1.5s ease-in-out infinite; margin-bottom: 2rem; }
+        .spinner-img { width: 120px; height: 120px; animation: float 1.5s ease-in-out infinite, spin 2s linear infinite; margin-bottom: 2rem; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .splash-title { font-size: 3rem; font-weight: 700; color: #3B82F6; text-shadow: 0 0 20px rgba(59,130,246,0.5); margin-bottom: 0.5rem; }
         .splash-subtitle { font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 2rem; }
         .press-start-btn { background: linear-gradient(145deg, #f97316, #ea580c); border: none; color: white; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.5rem; padding: 1rem 3rem; border-radius: 60px; box-shadow: 0 8px 0 #9a3412, 0 10px 20px rgba(0,0,0,0.3); cursor: pointer; transition: all 0.1s ease; text-transform: uppercase; letter-spacing: 2px; }
@@ -158,6 +158,10 @@
         .audio-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 4px; }
         .audio-status-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
         .audio-status-dot.offline { background: #ef4444; }
+        .glitch-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(0deg, rgba(0,255,0,0.2) 0px, rgba(0,255,0,0.2) 2px, transparent 2px, transparent 6px); pointer-events: none; z-index: 10001; animation: glitchFlash 0.3s steps(2) forwards; }
+        @keyframes glitchFlash { 0% { opacity: 0; } 10% { opacity: 1; } 100% { opacity: 0; } }
+        .reboot-btn { background: #dc2626; border-color: #b91c1c; color: white; transition: 0.1s; }
+        .reboot-btn:hover { background: #b91c1c; transform: scale(1.02); }
     </style>
 </head>
 <body>
@@ -214,7 +218,6 @@
 </div>
 
 <div id="tabHome" class="tab-container active-tab">
-    <!-- Home content (mantido igual) -->
     <div class="gran-layout" style="grid-template-columns: 1fr;">
         <div class="space-y-6">
             <div class="card p-6">
@@ -270,7 +273,6 @@
 </div>
 
 <div id="tabQuestoes" class="tab-container">
-    <!-- Aba de questões (mantida igual) -->
     <div class="gran-layout">
         <div class="sidebar space-y-6">
             <div class="card p-5">
@@ -302,7 +304,7 @@
             <div class="card p-5">
                 <div class="flex items-center gap-3 mb-3"><div class="bg-orange-500/10 p-2 rounded-xl"><i class="fas fa-file-upload text-orange-400 text-lg"></i></div><div><h2 class="font-semibold">Banco de questões</h2><p class="text-xs text-textSecondary">Importe até 20 itens (formato: Questão X: ... Comentário: ... Gabarito: Certo/Errado)</p></div></div>
                 <select id="disciplineSelect" class="w-full rounded-xl p-2.5 text-sm mb-3"></select>
-                <textarea id="questionsRaw" rows="3" class="w-full rounded-xl p-3 text-sm font-mono" placeholder='Questão 1: "A Declaração Universal foi adotada em 1948."&#10;&#10;Comentário: "Adotada pela ONU em 10/12/1948."&#10;&#10;Gabarito: Certo'></textarea>
+                <textarea id="questionsRaw" rows="3" class="w-full rounded-xl p-3 text-sm font-mono" placeholder='Questão 1: "A Declaração Universal foi adotada em 1948."\n\nComentário: "Adotada pela ONU em 10/12/1948."\n\nGabarito: Certo'></textarea>
                 <div class="flex flex-wrap gap-2 mt-3">
                     <button id="previewImportBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-xl text-sm"><i class="fas fa-eye"></i> Visualizar</button>
                     <button id="importBtn" class="flex-1 btn-primary py-2 rounded-xl text-sm"><i class="fas fa-cloud-upload-alt"></i> Importar</button>
@@ -343,22 +345,21 @@
 
 <button id="exitFocusBtn" class="exit-focus-btn"><i class="fas fa-times-circle"></i> Sair do modo foco</button>
 <div id="previewModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4"><div class="bg-card rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6 border border-borderLight"><h3 class="text-xl font-bold mb-3">Pré-visualização</h3><div id="previewList" class="space-y-2 text-sm"></div><div class="flex justify-end gap-3 mt-4"><button id="cancelPreview" class="px-4 py-2 bg-gray-700 rounded-xl">Cancelar</button><button id="confirmPreview" class="px-4 py-2 bg-orange-600 text-white rounded-xl">Confirmar</button></div></div></div>
-<div id="configModal" class="modal-config hidden"><div class="modal-config-content"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold"><i class="fas fa-chess-board"></i> Estratégia de Prova</h3><button id="closeConfigModal" class="text-2xl leading-5">&times;</button></div><div class="config-group"><h4><i class="fas fa-chart-line"></i> Distribuição de dificuldade</h4><div class="config-options" id="difficultyOptions"><span data-val="balanced" class="config-option selected">Equilibrado (3F/3M/3D/1MD)</span><span data-val="progressive" class="config-option">Progressivo</span><span data-val="advanced" class="config-option">Avançado</span><span data-val="simulated" class="config-option">Simulado real</span><span data-val="errorFocus" class="config-option">Foco em erros</span></div></div><div class="config-group"><h4><i class="fas fa-check-double"></i> Tipo de cobrança</h4><div class="config-options" id="typeOptions"><span data-val="cebraspe" class="config-option selected">Certo ou Errado</span><span data-val="mixed" class="config-option">Misto</span></div></div><div class="config-group"><h4><i class="fas fa-layer-group"></i> Nível de profundidade</h4><div class="config-options" id="depthOptions"><span data-val="quick" class="config-option">Revisão rápida</span><span data-val="standard" class="config-option selected">Treino padrão</span><span data-val="advanced" class="config-option">Treino avançado</span></div></div><div class="config-group"><h4><i class="fas fa-gem"></i> Extras</h4><div class="config-options" id="extrasOptions"><span data-val="trick" class="config-option">Modo pegadinhas</span><span data-val="topics" class="config-option">Priorizar temas mais cobrados</span><span data-val="interpret" class="config-option">Foco em interpretação</span></div></div><div class="flex gap-3 mt-5"><button id="applyConfigBtn" class="btn-primary flex-1 py-2 rounded-xl">Aplicar estratégia</button><button id="resetConfigBtn" class="bg-gray-700 px-4 rounded-xl">Resetar</button></div></div></div>
+<div id="configModal" class="modal-config hidden"><div class="modal-config-content"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold"><i class="fas fa-chess-board"></i> Estratégia de Prova</h3><button id="closeConfigModal" class="text-2xl leading-5">&times;</button></div><div class="config-group"><h4><i class="fas fa-chart-line"></i> Distribuição de dificuldade</h4><div class="config-options" id="difficultyOptions"><span data-val="balanced" class="config-option selected">Equilibrado (3F/3M/3D/1MD)</span><span data-val="progressive" class="config-option">Progressivo</span><span data-val="advanced" class="config-option">Avançado</span><span data-val="simulated" class="config-option">Simulado real</span><span data-val="errorFocus" class="config-option">Foco em erros</span></div></div><div class="config-group"><h4><i class="fas fa-check-double"></i> Tipo de cobrança</h4><div class="config-options" id="typeOptions"><span data-val="cebraspe" class="config-option selected">Certo ou Errado</span><span data-val="mixed" class="config-option">Misto</span></div></div><div class="config-group"><h4><i class="fas fa-layer-group"></i> Nível de profundidade</h4><div class="config-options" id="depthOptions"><span data-val="quick" class="config-option">Revisão rápida</span><span data-val="standard" class="config-option selected">Treino padrão</span><span data-val="advanced" class="config-option">Treino avançado</span></div></div><div class="config-group"><h4><i class="fas fa-gem"></i> Extras</h4><div class="config-options" id="extrasOptions"><span data-val="trick" class="config-option">Modo pegadinhas</span><span data-val="topics" class="config-option">Priorizar temas mais cobrados</span><span data-val="interpret" class="config-option">Foco em interpretação</span></div></div><div class="flex gap-3 mt-5"><button id="applyConfigBtn" class="btn-primary flex-1 py-2 rounded-xl">Aplicar estratégia</button><button id="resetConfigBtn" class="bg-gray-700 px-4 rounded-xl">Resetar</button></div><hr class="my-4 border-borderLight"><button id="rebootCacheBtn" class="reboot-btn w-full py-2 rounded-xl font-bold flex items-center justify-center gap-2"><i class="fas fa-sync-alt"></i> REBOOT SYSTEM</button></div></div>
 <div id="rewardPopup" class="reward-popup hide"><i id="rewardIcon" class="fas fa-trophy reward-icon"></i><span id="rewardText" class="reward-text"></span></div>
 
 <canvas id="canvasMoedas"></canvas>
 <audio id="somContagem" src="https://assets.mixkit.co/sfx/preview/mixkit-coins-handling-1939.mp3" preload="auto"></audio>
 <audio id="somFinal" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
 
-<!-- Elementos de áudio (mantidos para compatibilidade) -->
-<audio id="splashSoundAudio" preload="auto"></audio>
-<audio id="bgMusicAudio" preload="auto"></audio>
-<audio id="coinSoundAudio" preload="auto"></audio>
-<audio id="errorSoundAudio" preload="auto"></audio>
-<audio id="victorySoundAudio" preload="auto"></audio>
+<audio id="splashSoundAudio" src="Som inicio MP3.mp3" preload="auto"></audio>
+<audio id="bgMusicAudio" src="Música antes de carregar as questões.mp3" preload="auto" loop></audio>
+<audio id="coinSoundAudio" src="Som de moeda.mp3" preload="auto"></audio>
+<audio id="errorSoundAudio" src="Perdeu questões.mp3" preload="auto"></audio>
+<audio id="victorySoundAudio" src="Final das questões.mp3" preload="auto"></audio>
 
 <script>
-    // ================== AUDIOMANAGER HÍBRIDO (MP3 + SINTETIZADOR 8-BIT) ==================
+    // ================== AUDIOMANAGER HÍBRIDO COM FADE-IN E FALLBACK CHIPTUNE ==================
     const AudioManager = (function() {
         const elements = {
             splash: document.getElementById("splashSoundAudio"),
@@ -371,6 +372,9 @@
         let audioCtx = null;
         let useSynthetic = false;
         let mp3LoadSuccess = false;
+        let bgGainNode = null;
+        let bgSource = null;
+        let fadeInterval = null;
         const statusIndicator = document.getElementById("audioStatusIndicator");
         
         function updateStatusUI() {
@@ -395,12 +399,9 @@
         }
         
         function resumeAudio() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // Sons sintetizados estilo Nintendo
         function synthCoin() {
             if (!audioCtx) return;
             resumeAudio();
@@ -464,28 +465,85 @@
             osc.stop(now + 0.5);
         }
 
-        function synthBgMusic() {
-            // Música de fundo simples (loop de 4 notas)
+        // Chiptune menu music (loop infinito estilo Mega Man)
+        let menuLoopInterval = null;
+        function playChiptuneMenu() {
             if (!audioCtx) return;
             resumeAudio();
-            const now = audioCtx.currentTime;
-            const notes = [329.63, 392.00, 440.00, 523.25]; // E4, G4, A4, C5
-            notes.forEach((freq, i) => {
+            if (menuLoopInterval) clearInterval(menuLoopInterval);
+            const playNote = (freq, duration, startDelay) => {
+                const now = audioCtx.currentTime + startDelay;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'triangle';
+                osc.type = 'square';
                 osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.1, now + i * 0.5);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.5 + 0.4);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
                 osc.connect(gain).connect(audioCtx.destination);
-                osc.start(now + i * 0.5);
-                osc.stop(now + i * 0.5 + 0.4);
-            });
-            // Repetir a cada 2 segundos
-            setTimeout(() => synthBgMusic(), 2000);
+                osc.start(now);
+                osc.stop(now + duration);
+            };
+            const melody = [
+                {freq: 392, dur:0.2}, {freq: 440, dur:0.2}, {freq: 523.25, dur:0.2}, {freq: 493.88, dur:0.2},
+                {freq: 440, dur:0.2}, {freq: 392, dur:0.2}, {freq: 349.23, dur:0.2}, {freq: 329.63, dur:0.4}
+            ];
+            let time = 0;
+            const loop = () => {
+                melody.forEach(note => {
+                    playNote(note.freq, note.dur, time);
+                    time += note.dur;
+                });
+                time = 0;
+                menuLoopInterval = setTimeout(loop, melody.reduce((acc,n)=>acc+n.dur,0)*1000);
+            };
+            loop();
+        }
+        function stopChiptuneMenu() {
+            if (menuLoopInterval) {
+                clearTimeout(menuLoopInterval);
+                menuLoopInterval = null;
+            }
         }
 
-        // Tentar carregar MP3s
+        function fadeInBgMusic() {
+            if (useSynthetic) {
+                playChiptuneMenu();
+                return;
+            }
+            const audio = elements.bgMusic;
+            if (!audio) return;
+            audio.volume = 0;
+            audio.currentTime = 0;
+            audio.play().catch(e => { useSynthetic = true; playChiptuneMenu(); });
+            if (fadeInterval) clearInterval(fadeInterval);
+            let vol = 0;
+            fadeInterval = setInterval(() => {
+                vol = Math.min(0.5, vol + 0.02);
+                audio.volume = vol;
+                if (vol >= 0.5) clearInterval(fadeInterval);
+            }, 100);
+        }
+
+        function stopBgMusicWithFade() {
+            if (useSynthetic) {
+                stopChiptuneMenu();
+                return;
+            }
+            const audio = elements.bgMusic;
+            if (!audio) return;
+            if (fadeInterval) clearInterval(fadeInterval);
+            let vol = audio.volume;
+            fadeInterval = setInterval(() => {
+                vol = Math.max(0, vol - 0.05);
+                audio.volume = vol;
+                if (vol <= 0) {
+                    clearInterval(fadeInterval);
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }, 50);
+        }
+
         function loadMp3Files() {
             const files = [
                 { el: elements.splash, name: "Som inicio MP3.mp3" },
@@ -494,38 +552,26 @@
                 { el: elements.error, name: "Perdeu questões.mp3" },
                 { el: elements.victory, name: "Final das questões.mp3" }
             ];
-            
             let loadedCount = 0;
-            const total = files.length;
-            
             files.forEach(item => {
-                item.el.src = encodeURI(item.name);
                 item.el.addEventListener('canplaythrough', () => {
                     loadedCount++;
-                    if (loadedCount === total) {
+                    if (loadedCount === files.length) {
                         mp3LoadSuccess = true;
                         useSynthetic = false;
                         updateStatusUI();
-                        console.log("✅ Todos os MP3 carregados com sucesso.");
                     }
                 }, { once: true });
-                
                 item.el.addEventListener('error', () => {
-                    console.warn(`❌ Falha ao carregar: ${item.name}`);
                     useSynthetic = true;
                     mp3LoadSuccess = false;
                     updateStatusUI();
                     initSynthesizer();
                 }, { once: true });
-                
                 item.el.load();
             });
-            
-            elements.bgMusic.loop = true;
-            
             setTimeout(() => {
                 if (!mp3LoadSuccess && loadedCount === 0) {
-                    console.log("⏱️ Timeout: ativando modo sintetizado.");
                     useSynthetic = true;
                     updateStatusUI();
                     initSynthesizer();
@@ -533,87 +579,33 @@
             }, 2000);
         }
 
-        // API Pública
         return {
-            init() {
-                loadMp3Files();
-                initSynthesizer();
-            },
-            playSplash() {
-                if (useSynthetic) {
-                    synthSplash();
-                    return;
-                }
-                elements.splash.currentTime = 0;
-                elements.splash.play().catch(() => { useSynthetic = true; synthSplash(); });
-            },
-            playBgMusic() {
-                if (useSynthetic) {
-                    synthBgMusic();
-                    return;
-                }
-                elements.bgMusic.currentTime = 0;
-                elements.bgMusic.play().catch(e => console.warn("BgMusic bloqueado"));
-            },
-            stopBgMusic() {
-                elements.bgMusic.pause();
-                elements.bgMusic.currentTime = 0;
-            },
-            playCoin() {
-                if (useSynthetic) {
-                    synthCoin();
-                    return;
-                }
-                elements.coin.currentTime = 0;
-                elements.coin.play().catch(() => { useSynthetic = true; synthCoin(); });
-            },
-            playError() {
-                if (useSynthetic) {
-                    synthError();
-                    return;
-                }
-                elements.error.currentTime = 0;
-                elements.error.play().catch(() => { useSynthetic = true; synthError(); });
-            },
-            playVictory() {
-                if (useSynthetic) {
-                    synthVictory();
-                    return;
-                }
-                elements.victory.currentTime = 0;
-                elements.victory.play().catch(() => { useSynthetic = true; synthVictory(); });
-            },
+            init() { loadMp3Files(); initSynthesizer(); },
+            playSplash() { if (useSynthetic) synthSplash(); else { elements.splash.currentTime=0; elements.splash.play().catch(()=>{useSynthetic=true;synthSplash();}); } },
+            playBgMusic() { fadeInBgMusic(); },
+            stopBgMusic() { stopBgMusicWithFade(); },
+            playCoin() { if (useSynthetic) synthCoin(); else { elements.coin.currentTime=0; elements.coin.play().catch(()=>{useSynthetic=true;synthCoin();}); } },
+            playError() { if (useSynthetic) synthError(); else { elements.error.currentTime=0; elements.error.play().catch(()=>{useSynthetic=true;synthError();}); } },
+            playVictory() { if (useSynthetic) synthVictory(); else { elements.victory.currentTime=0; elements.victory.play().catch(()=>{useSynthetic=true;synthVictory();}); } },
             isSynthetic() { return useSynthetic; }
         };
     })();
-
     window.AudioManager = AudioManager;
 
     // ================== ESTADO GLOBAL DO JOGO ==================
-    const GameState = {
-        started: false,
-        questions: [],
-        currentIndex: 0,
-        coins: 0,
-        answered: 0,
-        maxQuestions: 15
-    };
+    const GameState = { started: false, questions: [], currentIndex: 0, coins: 0, answered: 0, maxQuestions: 15 };
 
-    // ================== FUNÇÃO DE FINALIZAÇÃO ==================
     function finalizarRodada() {
         AudioManager.stopBgMusic();
         AudioManager.playVictory();
-
-        // Obter moedas acumuladas do gamification (ConcursoCoins)
-        const totalCoinsGamification = parseInt(localStorage.getItem("concursoCoins")) || 0;
-
+        const totalCoins = parseInt(localStorage.getItem("concursoCoins")) || 0;
         const modal = document.createElement('div');
         modal.className = 'bateria-modal';
         modal.innerHTML = `
             <div class="bateria-content">
                 <h2 style="font-family: 'Poppins', sans-serif;">🎉 Parabéns!</h2>
                 <p style="font-size:1.2rem;">Você conseguiu terminar a primeira bateria de questões</p>
-                <h1 style="font-size:3rem; margin:1rem 0;">💰 ${totalCoinsGamification.toLocaleString()}</h1>
+                <h1 style="font-size:3rem; margin:1rem 0;">💰 ${totalCoins.toLocaleString()}</h1>
                 <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png" class="coin-bounce" width="100" alt="Moedas">
                 <br>
                 <button id="fecharBateriaBtn" class="btn-primary px-6 py-2 rounded-full mt-4">Continuar</button>
@@ -621,8 +613,7 @@
         `;
         document.body.appendChild(modal);
         document.getElementById('fecharBateriaBtn').onclick = () => modal.remove();
-
-        for (let i=0; i<60; i++) {
+        for (let i=0;i<80;i++) {
             const conf = document.createElement('div');
             conf.classList.add('confetti');
             conf.style.left = Math.random()*100+'%';
@@ -638,29 +629,20 @@
     (function() {
         const splash = document.getElementById('splashScreen');
         const pressStart = document.getElementById('pressStartBtn');
-
         pressStart.addEventListener('click', () => {
             AudioManager.init();
             AudioManager.playSplash();
             AudioManager.playBgMusic();
-
             splash.classList.add('fade-out');
             localStorage.setItem('splashShown', 'true');
-            setTimeout(() => {
-                splash.style.display = 'none';
-            }, 800);
+            setTimeout(() => splash.style.display = 'none', 800);
         });
-
-        if (localStorage.getItem('splashShown') === 'true') {
-            splash.style.display = 'none';
-        } else {
-            splash.style.display = 'flex';
-        }
+        if (localStorage.getItem('splashShown') === 'true') splash.style.display = 'none';
+        else splash.style.display = 'flex';
     })();
 
-    // ================== CÓDIGO ORIGINAL COMPLETO (PRESERVADO E INTEGRADO) ==================
+    // ================== CÓDIGO ORIGINAL COMPLETO (PRESERVADO) ==================
     (function() {
-        // TEMA
         const savedTheme = localStorage.getItem("theme") || "dark";
         document.documentElement.setAttribute("data-theme", savedTheme);
         window.toggleTheme = function() {
@@ -743,16 +725,12 @@
             if(window.atualizarDashboardPowerBI) window.atualizarDashboardPowerBI();
             if(window.resetGamificationOnImport) window.resetGamificationOnImport();
             if(window.updateHomeStats) window.updateHomeStats();
-            
-            AudioManager.stopBgMusic();
-            
-            // INICIALIZAR GAMESTATE
+            AudioManager.stopBgMusic(); // Para a música de menu ao importar
             GameState.started = true;
             GameState.questions = questions;
             GameState.answered = 0;
             GameState.currentIndex = 0;
-            GameState.coins = 0;  // resetar moedas ao importar novo jogo
-            
+            GameState.coins = 0;
             return true;
         }
         function saveToLocal() {
@@ -795,12 +773,10 @@
             updatePointsAndStreak();
             applyFilter();
             if(window.atualizarDashboardPowerBI) window.atualizarDashboardPowerBI();
-            
-            // Sincronizar GameState com dados carregados
             GameState.questions = questions;
             GameState.answered = questions.filter(q => q.responded).length;
             GameState.started = questions.length > 0;
-            GameState.coins = points; // points é a moeda do sistema existente
+            GameState.coins = points;
         }
         function updatePointsAndStreak() {
             let totalPoints = 0, currentStreak = 0;
@@ -816,8 +792,6 @@
             streakCountSpan.innerText = streak;
             saveToLocal();
             if(window.updateHomeStats) window.updateHomeStats();
-            
-            // Atualizar GameState.coins
             GameState.coins = points;
         }
         window.responderQuestao = function(id, resposta) {
@@ -834,22 +808,11 @@
             document.getElementById(`question-card-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
             if(window.atualizarDashboardPowerBI) window.atualizarDashboardPowerBI();
             if(window.onQuestionAnswered) window.onQuestionAnswered(q.number, wasCorrect);
-            
-            // Feedback sonoro
-            if (wasCorrect) {
-                AudioManager.playCoin();
-            } else {
-                AudioManager.playError();
-            }
-            
-            // Atualizar GameState
+            if (wasCorrect) AudioManager.playCoin();
+            else AudioManager.playError();
             GameState.answered = questions.filter(q => q.responded).length;
             GameState.coins = points;
-            
-            // Verificar fim de jogo
-            if (GameState.answered >= GameState.maxQuestions) {
-                finalizarRodada();
-            }
+            if (GameState.answered >= GameState.maxQuestions) finalizarRodada();
         };
         function toggleComentario(id) { const q = questions.find(qq => qq.id === id); if(q && q.responded) { q.showComment = !q.showComment; renderAll(); } }
         function toggleStar(id) { if(starredSet.has(id)) starredSet.delete(id); else starredSet.add(id); saveToLocal(); renderAll(); }
@@ -884,11 +847,51 @@
         
         function initTrainingModal() { const modal = document.getElementById("configModal"); const openBtn = document.getElementById("configTreinoBtn"); const closeBtn = document.getElementById("closeConfigModal"); const applyBtn = document.getElementById("applyConfigBtn"); const resetConfigBtn = document.getElementById("resetConfigBtn"); if(openBtn) openBtn.onclick = () => { modal.classList.remove("hidden"); }; if(closeBtn) closeBtn.onclick = () => { modal.classList.add("hidden"); }; if(applyBtn) applyBtn.onclick = () => { const diffSelected = document.querySelector("#difficultyOptions .config-option.selected")?.dataset.val || "balanced"; const typeSelected = document.querySelector("#typeOptions .config-option.selected")?.dataset.val || "cebraspe"; const depthSelected = document.querySelector("#depthOptions .config-option.selected")?.dataset.val || "standard"; let extrasSelected = []; document.querySelectorAll("#extrasOptions .config-option.selected").forEach(el => extrasSelected.push(el.dataset.val)); trainingConfig = { difficulty: diffSelected, type: typeSelected, depth: depthSelected, extras: extrasSelected }; saveToLocal(); modal.classList.add("hidden"); applyTrainingStrategy(); showToast("Estratégia aplicada com sucesso!"); }; if(resetConfigBtn) resetConfigBtn.onclick = () => { trainingConfig = { difficulty: "balanced", type: "cebraspe", depth: "standard", extras: [] }; saveToLocal(); document.querySelectorAll("#difficultyOptions .config-option").forEach(opt => opt.classList.remove("selected")); document.querySelector("#difficultyOptions .config-option[data-val='balanced']").classList.add("selected"); document.querySelectorAll("#typeOptions .config-option").forEach(opt => opt.classList.remove("selected")); document.querySelector("#typeOptions .config-option[data-val='cebraspe']").classList.add("selected"); document.querySelectorAll("#depthOptions .config-option").forEach(opt => opt.classList.remove("selected")); document.querySelector("#depthOptions .config-option[data-val='standard']").classList.add("selected"); document.querySelectorAll("#extrasOptions .config-option").forEach(opt => opt.classList.remove("selected")); showToast("Configurações resetadas"); if(questions.length) applyFilter(); }; document.querySelectorAll(".config-option").forEach(opt => { opt.addEventListener("click", (e) => { const parent = opt.parentNode; if(parent.id === "extrasOptions") opt.classList.toggle("selected"); else { parent.querySelectorAll(".config-option").forEach(o => o.classList.remove("selected")); opt.classList.add("selected"); } }); }); }
         function initFontControls() { const fontBtn = document.getElementById("fontSettingsBtn"); const panel = document.getElementById("fontPanel"); fontBtn.onclick = (e) => { e.stopPropagation(); panel.classList.toggle("hidden"); }; document.getElementById("fontDecreaseQuestion").onclick = () => changeFontSize('question', -0.05); document.getElementById("fontIncreaseQuestion").onclick = () => changeFontSize('question', 0.05); document.getElementById("fontDecreaseComment").onclick = () => changeFontSize('comment', -0.05); document.getElementById("fontIncreaseComment").onclick = () => changeFontSize('comment', 0.05); document.addEventListener("click", (e) => { if(!fontBtn.contains(e.target) && !panel.contains(e.target)) panel.classList.add("hidden"); }); }
-        document.getElementById("timerStart").onclick = startTimer; document.getElementById("timerPause").onclick = pauseTimer; document.getElementById("timerStop").onclick = stopTimer; document.getElementById("resetProgressBtn").onclick = resetProgress; document.getElementById("clearAllBtn").onclick = clearAllData; document.getElementById("exportDataBtn").onclick = exportJSON; document.getElementById("focusModeBtn").onclick = () => document.body.classList.toggle("focus-mode"); document.getElementById("exitFocusBtn").onclick = () => document.body.classList.remove("focus-mode"); document.getElementById("themeToggleBtn").onclick = toggleTheme; prevPageBtn.onclick = prevPage; nextPageBtn.onclick = nextPage; applyFilterBtn.onclick = applyFilter; importBtn.onclick = () => { if(rawInput.value.trim()) importQuestions(rawInput.value); }; previewBtn.onclick = () => { let parsed = parseQuestoes(rawInput.value); if(parsed.length) { document.getElementById("previewList").innerHTML = parsed.map(q=>`<div><strong>Q${q.number}:</strong> ${q.text.substring(0,80)}... <span class="text-xs">${q.answer}</span></div>`).join(""); document.getElementById("previewModal").style.display = "flex"; } else showToast("Nada detectado"); }; document.getElementById("cancelPreview").onclick = () => document.getElementById("previewModal").style.display = "none"; document.getElementById("confirmPreview").onclick = () => { importQuestions(rawInput.value); document.getElementById("previewModal").style.display = "none"; }; exampleBtn.onclick = () => { rawInput.value = `Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."\nComentário: "Adotada pela ONU em 10/12/1948."\nGabarito: Certo\n\nQuestão 2: "O Brasil foi descoberto em 1500 por Pedro Álvares Cabral."\nComentário: "Fato histórico consolidado."\nGabarito: Certo\n\nQuestão 3: "A auditoria interna é facultativa para empresas de capital aberto."\nComentário: "É obrigatória por lei."\nGabarito: Errado`; importQuestions(rawInput.value); }; importPdfBtn.onclick = () => pdfUpload.click(); pdfUpload.onchange = async(e) => { if(e.target.files[0]) { showToast("Extraindo PDF..."); let file = e.target.files[0]; let reader = new FileReader(); reader.onload = async(ev) => { let typedarray = new Uint8Array(ev.target.result); let pdf = await pdfjsLib.getDocument(typedarray).promise; let text=""; for(let i=1;i<=pdf.numPages;i++) { let page=await pdf.getPage(i); let content=await page.getTextContent(); text+=content.items.map(t=>t.str).join(" "); } rawInput.value = text; importQuestions(text); }; reader.readAsArrayBuffer(file); } }; document.getElementById("userMenuBtn").onclick = () => document.getElementById("userDropdown").classList.toggle("hidden"); document.addEventListener("click", (e) => { if(!document.getElementById("userMenuBtn").contains(e.target)) document.getElementById("userDropdown").classList.add("hidden"); }); document.getElementById("reportBtn").onclick = generateReport; document.getElementById("downloadErrorsBtn").onclick = generateErrorNotebook; document.getElementById("downloadNotebookBtn").onclick = generateNotebookLMPrompt; window.addEventListener("keydown", (e) => { if(e.key==="ArrowRight") nextPage(); if(e.key==="ArrowLeft") prevPage(); });
+        
+        function rebootSystem() {
+            const confirmReboot = confirm("⚠️ Deseja Reiniciar o Sistema?\nIsso recarregará todos os dados de interface.\n(Seu progresso das questões será mantido)");
+            if(!confirmReboot) return;
+            const glitch = document.createElement('div');
+            glitch.className = 'glitch-overlay';
+            document.body.appendChild(glitch);
+            const rebootSound = new Audio('data:audio/wav;base64,U3RlYWx0aCBzb3VuZA==');
+            rebootSound.play().catch(e=>console.log);
+            setTimeout(() => {
+                glitch.remove();
+                location.reload();
+            }, 500);
+        }
+        
+        document.getElementById("timerStart").onclick = startTimer;
+        document.getElementById("timerPause").onclick = pauseTimer;
+        document.getElementById("timerStop").onclick = stopTimer;
+        document.getElementById("resetProgressBtn").onclick = resetProgress;
+        document.getElementById("clearAllBtn").onclick = clearAllData;
+        document.getElementById("exportDataBtn").onclick = exportJSON;
+        document.getElementById("focusModeBtn").onclick = () => document.body.classList.toggle("focus-mode");
+        document.getElementById("exitFocusBtn").onclick = () => document.body.classList.remove("focus-mode");
+        document.getElementById("themeToggleBtn").onclick = toggleTheme;
+        prevPageBtn.onclick = prevPage;
+        nextPageBtn.onclick = nextPage;
+        applyFilterBtn.onclick = applyFilter;
+        importBtn.onclick = () => { if(rawInput.value.trim()) importQuestions(rawInput.value); };
+        previewBtn.onclick = () => { let parsed = parseQuestoes(rawInput.value); if(parsed.length) { document.getElementById("previewList").innerHTML = parsed.map(q=>`<div><strong>Q${q.number}:</strong> ${q.text.substring(0,80)}... <span class="text-xs">${q.answer}</span></div>`).join(""); document.getElementById("previewModal").style.display = "flex"; } else showToast("Nada detectado"); };
+        document.getElementById("cancelPreview").onclick = () => document.getElementById("previewModal").style.display = "none";
+        document.getElementById("confirmPreview").onclick = () => { importQuestions(rawInput.value); document.getElementById("previewModal").style.display = "none"; };
+        exampleBtn.onclick = () => { rawInput.value = `Questão 1: "A Declaração Universal dos Direitos Humanos foi adotada em 1948."\nComentário: "Adotada pela ONU em 10/12/1948."\nGabarito: Certo\n\nQuestão 2: "O Brasil foi descoberto em 1500 por Pedro Álvares Cabral."\nComentário: "Fato histórico consolidado."\nGabarito: Certo\n\nQuestão 3: "A auditoria interna é facultativa para empresas de capital aberto."\nComentário: "É obrigatória por lei."\nGabarito: Errado`; importQuestions(rawInput.value); };
+        importPdfBtn.onclick = () => pdfUpload.click();
+        pdfUpload.onchange = async(e) => { if(e.target.files[0]) { showToast("Extraindo PDF..."); let file = e.target.files[0]; let reader = new FileReader(); reader.onload = async(ev) => { let typedarray = new Uint8Array(ev.target.result); let pdf = await pdfjsLib.getDocument(typedarray).promise; let text=""; for(let i=1;i<=pdf.numPages;i++) { let page=await pdf.getPage(i); let content=await page.getTextContent(); text+=content.items.map(t=>t.str).join(" "); } rawInput.value = text; importQuestions(text); }; reader.readAsArrayBuffer(file); } };
+        document.getElementById("userMenuBtn").onclick = () => document.getElementById("userDropdown").classList.toggle("hidden");
+        document.addEventListener("click", (e) => { if(!document.getElementById("userMenuBtn").contains(e.target)) document.getElementById("userDropdown").classList.add("hidden"); });
+        document.getElementById("reportBtn").onclick = generateReport;
+        document.getElementById("downloadErrorsBtn").onclick = generateErrorNotebook;
+        document.getElementById("downloadNotebookBtn").onclick = generateNotebookLMPrompt;
+        window.addEventListener("keydown", (e) => { if(e.key==="ArrowRight") nextPage(); if(e.key==="ArrowLeft") prevPage(); });
+        document.getElementById("rebootCacheBtn").onclick = rebootSystem;
         loadFromLocal(); initTrainingModal(); initFontControls(); if(!questions.length) showToast("Bem-vindo! Clique em 'Exemplo' para importar questões.");
     })();
     
-    // ================== SISTEMA CONCURSOCOIN (GAMIFICAÇÃO) ==================
+    // ================== SISTEMA CONCURSOCOIN E HOME ==================
     (function() {
         let totalCoins = 0; let currentStreak = 0; let bestStreak = 0; let jackpotCount = 0; let lastBonus5 = false; let lastBonus10 = false; let jackpotTriggeredThisStreak = false; let rodadaID = 0;
         const mensagensAcerto = ["+{valor} ConcursoCoins 💰","Boa! +{valor} moedas!","Acertou! Ganho de {valor} 💰","Mandou bem! +{valor}","💰 +{valor} coins! Continue!","Show! +{valor} moedas!"];
@@ -913,19 +916,6 @@
         loadData(); updateUI();
     })();
     
-    // ================== MENSAGENS DE FINAL DE RODADA (mantido) ==================
-    (function() {
-        let moedasGanhasRodada = 0; let rodadaFinalizadaExibida = false;
-        const estilos = [ { nome: "premio", iconClass: "fas fa-trophy", frases: ["💰 Rodada concluída! +{moedas} ConcursoCoins", "🏆 Você finalizou a bateria! Ganho: +{moedas} moedas", "🎯 Missão cumprida! +{moedas} ConcursoCoins adicionadas"] }, { nome: "motivacional", iconClass: "fas fa-medal", frases: ["📚 Mais perto da aprovação! +{moedas} moedas", "🧠 Conhecimento acumulado! +{moedas} ConcursoCoins", "🚀 Você está evoluindo! +{moedas} moedas"] }, { nome: "cassino", iconClass: "fas fa-coins", frases: ["🎰 Rodada encerrada! Você faturou +{moedas} moedas!", "💥 Resultado da rodada: +{moedas} ConcursoCoins!", "⚡ Pagamento liberado! +{moedas} moedas creditadas!"] }, { nome: "conquista", iconClass: "fas fa-crown", frases: ["👑 Execução de alto nível! +{moedas} moedas", "🏅 Desempenho sólido! +{moedas} ConcursoCoins", "🏆 Mais uma vitória! +{moedas} moedas na conta"] }, { nome: "foco", iconClass: "fas fa-briefcase", frases: ["💼 Mentalidade de aprovado! +{moedas} ConcursoCoins", "💰 Você acabou de pagar mais um pedaço do relógio! +{moedas}", "📊 Progresso real! +{moedas} moedas pro relógio", "⌚ Esse relógio tá mais perto! +{moedas} moedas"] }, { nome: "impacto", iconClass: "fas fa-bolt", frases: ["⚡ Você veio pra jogar! +{moedas} moedas!", "📈 Progresso consistente! +{moedas} moedas"] } ];
-        function getRandomMessageAndIcon(moedas) { const estilo = estilos[Math.floor(Math.random() * estilos.length)]; const fraseTemplate = estilo.frases[Math.floor(Math.random() * estilo.frases.length)]; const frase = fraseTemplate.replace("{moedas}", moedas.toLocaleString()); return { frase, iconClass: estilo.iconClass }; }
-        function showRewardPopup(moedas) { const popup = document.getElementById("rewardPopup"); const iconElement = document.getElementById("rewardIcon"); const textSpan = document.getElementById("rewardText"); if (!popup || !iconElement || !textSpan) return; const { frase, iconClass } = getRandomMessageAndIcon(moedas); iconElement.className = `reward-icon ${iconClass}`; textSpan.innerText = frase; popup.classList.remove("hide"); popup.classList.add("show"); for (let i = 0; i < 40; i++) { const conf = document.createElement("div"); conf.classList.add("confetti"); conf.style.left = Math.random() * 100 + "%"; conf.style.width = Math.random() * 6 + 3 + "px"; conf.style.height = Math.random() * 10 + 5 + "px"; conf.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`; conf.style.position = "fixed"; conf.style.top = "-20px"; conf.style.borderRadius = "2px"; conf.style.animationDuration = Math.random() * 1.5 + 1 + "s"; conf.style.animationDelay = Math.random() * 0.3 + "s"; document.body.appendChild(conf); setTimeout(() => conf.remove(), 3000); } setTimeout(() => { popup.classList.remove("show"); popup.classList.add("hide"); }, 4500); }
-        function resetRodadaState() { moedasGanhasRodada = 0; rodadaFinalizadaExibida = false; }
-        function verificarRodadaCompleta() { const cards = document.querySelectorAll('.question-card'); if (cards.length === 0) return false; const respondidos = document.querySelectorAll('.question-card.correta, .question-card.errada'); return respondidos.length === cards.length; }
-        const originalOnQA = window.onQuestionAnswered; window.onQuestionAnswered = function(questionNumber, wasCorrect) { if (originalOnQA) originalOnQA(questionNumber, wasCorrect); if (wasCorrect) moedasGanhasRodada += questionNumber; setTimeout(() => { if (verificarRodadaCompleta() && !rodadaFinalizadaExibida && moedasGanhasRodada > 0) { rodadaFinalizadaExibida = true; showRewardPopup(moedasGanhasRodada); } }, 100); };
-        function attachResetEvents() { ['importBtn', 'exampleBtn', 'resetProgressBtn', 'clearAllBtn', 'confirmPreview'].forEach(id => { const btn = document.getElementById(id); if (btn) btn.addEventListener('click', () => setTimeout(() => resetRodadaState(), 200)); }); const pdfBtn = document.getElementById('importPdfBtn'); if (pdfBtn) pdfBtn.addEventListener('click', () => setTimeout(() => resetRodadaState(), 500)); const pdfUploadEl = document.getElementById('pdfUpload'); if (pdfUploadEl) pdfUploadEl.addEventListener('change', () => setTimeout(() => resetRodadaState(), 800)); } attachResetEvents(); resetRodadaState();
-    })();
-    
-    // ================== NOVA HOME + EFEITO CASSINO PRO ==================
     (function(){
         window.updateHomeStats = function() {
             try {
@@ -959,12 +949,7 @@
             const duracao = 2000;
             const incremento = valorFinal / (duracao / 30);
             elemento.classList.add("ganhando");
-            if (somContagem) {
-                try {
-                    somContagem.currentTime = 0;
-                    somContagem.play().catch(e=>console.warn("Áudio contagem não pode tocar", e));
-                } catch(e) {}
-            }
+            if (somContagem) { try { somContagem.currentTime = 0; somContagem.play().catch(e=>console.warn("Áudio contagem não pode tocar", e)); } catch(e) {} }
             if (window._saldoIntervalCassino) clearInterval(window._saldoIntervalCassino);
             window._saldoIntervalCassino = setInterval(() => {
                 valorAtual += incremento;
@@ -972,19 +957,10 @@
                     valorAtual = valorFinal;
                     clearInterval(window._saldoIntervalCassino);
                     if (somContagem) { try { somContagem.pause(); somContagem.currentTime = 0; } catch(e) {} }
-                    if (somFinal) {
-                        try {
-                            somFinal.currentTime = 0;
-                            somFinal.play().catch(e=>console.warn("Som final não pode tocar", e));
-                        } catch(e) {}
-                    }
+                    if (somFinal) { try { somFinal.currentTime = 0; somFinal.play().catch(e=>console.warn("Som final não pode tocar", e)); } catch(e) {} }
                     efeitoMoedas();
-                    if (navigator.vibrate) {
-                        try { navigator.vibrate([200, 100, 200]); } catch(e) {}
-                    }
-                    setTimeout(() => {
-                        elemento.classList.remove("ganhando");
-                    }, 1000);
+                    if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch(e) {} }
+                    setTimeout(() => elemento.classList.remove("ganhando"), 1000);
                 }
                 elemento.innerText = Math.floor(valorAtual).toLocaleString() + " BTCC";
             }, 30);
@@ -997,31 +973,8 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             let moedas = [];
-            for (let i = 0; i < 40; i++) {
-                moedas.push({
-                    x: Math.random() * canvas.width,
-                    y: -20,
-                    size: Math.random() * 10 + 5,
-                    speed: Math.random() * 5 + 2
-                });
-            }
-            function animar() {
-                if (!ctx) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                moedas.forEach(m => {
-                    m.y += m.speed;
-                    ctx.beginPath();
-                    ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-                    ctx.fillStyle = "#FFD700";
-                    ctx.fill();
-                });
-                moedas = moedas.filter(m => m.y < canvas.height);
-                if (moedas.length > 0) {
-                    requestAnimationFrame(animar);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-            }
+            for (let i = 0; i < 40; i++) { moedas.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 10 + 5, speed: Math.random() * 5 + 2 }); }
+            function animar() { if (!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); moedas.forEach(m => { m.y += m.speed; ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2); ctx.fillStyle = "#FFD700"; ctx.fill(); }); moedas = moedas.filter(m => m.y < canvas.height); if (moedas.length > 0) requestAnimationFrame(animar); else ctx.clearRect(0, 0, canvas.width, canvas.height); }
             animar();
         }
         
@@ -1040,12 +993,7 @@
                 const questoesEl = document.getElementById("questoes");
                 if (questoesEl) questoesEl.innerText = questoes;
                 animarSaldoCassinoPRO(saldo);
-            } catch (error) {
-                console.warn("Erro ao carregar API externa:", error);
-                document.getElementById("saldo").innerText = "0 BTCC";
-                document.getElementById("questoes").innerText = "0";
-                document.getElementById("saldoZeroMsg")?.classList.remove("hidden");
-            }
+            } catch (error) { console.warn("Erro ao carregar API externa:", error); document.getElementById("saldo").innerText = "0 BTCC"; document.getElementById("questoes").innerText = "0"; document.getElementById("saldoZeroMsg")?.classList.remove("hidden"); }
         }
         
         const tabHome = document.getElementById("tabHome");
@@ -1053,41 +1001,15 @@
         const btnHome = document.getElementById("tabHomeBtn");
         const btnQuestoes = document.getElementById("tabQuestoesBtn");
         if(btnHome && btnQuestoes && tabHome && tabQuestoes) {
-            btnHome.addEventListener("click", () => {
-                btnHome.classList.add("active");
-                btnQuestoes.classList.remove("active");
-                tabHome.classList.add("active-tab");
-                tabQuestoes.classList.remove("active-tab");
-                if(window.updateHomeStats) window.updateHomeStats();
-            });
-            btnQuestoes.addEventListener("click", () => {
-                btnQuestoes.classList.add("active");
-                btnHome.classList.remove("active");
-                tabQuestoes.classList.add("active-tab");
-                tabHome.classList.remove("active-tab");
-            });
+            btnHome.addEventListener("click", () => { btnHome.classList.add("active"); btnQuestoes.classList.remove("active"); tabHome.classList.add("active-tab"); tabQuestoes.classList.remove("active-tab"); if(window.updateHomeStats) window.updateHomeStats(); });
+            btnQuestoes.addEventListener("click", () => { btnQuestoes.classList.add("active"); btnHome.classList.remove("active"); tabQuestoes.classList.add("active-tab"); tabHome.classList.remove("active-tab"); });
         }
         if(window.updateHomeStats) window.updateHomeStats();
         carregarDadosAPI();
         setInterval(() => { if(window.updateHomeStats) window.updateHomeStats(); }, 2000);
         setInterval(() => carregarDadosAPI(), 30000);
-        
-        window.addEventListener("resize", () => {
-            const canvas = document.getElementById("canvasMoedas");
-            if (canvas && canvas.width) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-        });
+        window.addEventListener("resize", () => { const canvas = document.getElementById("canvasMoedas"); if (canvas && canvas.width) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } });
     })();
 </script>
-<!-- Créditos de áudio (conforme exigido pelas licenças) -->
-<!-- 
-Som inicio MP3.mp3: Sound Effect by FoxBoyTails from Pixabay
-Música antes de carregar as questões.mp3: Sound Effect by freesound_community from Pixabay
-Som de moeda.mp3: Sound Effect by u_oepgi4ep3v from Pixabay
-Perdeu questões.mp3: Sound Effect by floraphonic from Pixabay
-Final das questões.mp3: Sound Effect by floraphonic from Pixabay
--->
 </body>
 </html>
